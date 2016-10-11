@@ -2,7 +2,7 @@
 
 $servername = 'localhost';
 $username = 'root';
-$password = 'InternetOfThingsWorkshop5';
+$password = '';
 $db = 'internet_of_things_workshop';
 
 $connection = new mysqli($servername, $username, $password, $db);

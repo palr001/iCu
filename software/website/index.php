@@ -4,7 +4,7 @@
 <?php
 require_once('database.php');
 
-if($result = $connection->query('SELECT * FROM entry ORDER BY time DESC')) {
+if($result = $connection->query('SELECT * FROM entry ORDER BY timestamp DESC')) {
   $entries = $result->fetch_all();
 } else {
   die($connection->error);
