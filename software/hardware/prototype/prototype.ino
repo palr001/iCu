@@ -1,12 +1,8 @@
-
-// FOR SOME REASON HTTP AND COLOR DOESNT WORK TOGETHER!
-// ITS PROBABLY BECAUSE THE WIFI IS BLOCKING/RETURNING IF NO CONNECTION CAN BE MADE
-
 #include <OpenWiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <Adafruit_NeoPixel.h>
 
-#define BUTTON_PIN   D1    // Digital IO pin connected to the button.  This will be
+#define BUTTON_PIN   D1   // Digital IO pin connected to the button.  This will be
                           // driven with a pull-up resistor so the switch should
                           // pull the pin to ground momentarily.  On a high -> low
                           // transition the button press logic will execute.
@@ -44,7 +40,7 @@ void setup() {
   strip.show(); // Initialize all pixels to 'off'
 
   // No wifi == no lights because the program will be busy connecting
-  // hotspot.begin("HomeNetwork", "HomePassword");
+  hotspot.begin("HomeNetwork", "HomePassword");
 }
 
 void loop() {
@@ -56,7 +52,7 @@ void loop() {
     Serial.println("Send request to server");
       
     HTTPClient http;
-    http.begin("http://178.62.233.141/add_entry.php");
+    http.begin("http://178.62.201.186/add_entry.php");
     uint16_t httpCode = http.GET();
  
     if (httpCode == 200) {
@@ -97,24 +93,3 @@ void colorWipe(uint32_t c) {
     strip.show();
   }
 }
-
-//
-//
-//OpenWiFi hotspot;
-//int pushButton = D1;
-//int oldButtonState = LOW;
-//
-//// the setup routine runs once when you press reset:
-//void setup() {
-
-//}
-//
-//// the loop routine runs over and over again forever:
-//void loop() {
-//  
-//  // read the input pin:
-//  int buttonState = digitalRead(pushButton);
-//
-//  delay(1); // delay in between reads for stability
-
-//}

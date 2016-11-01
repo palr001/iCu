@@ -1,0 +1,57 @@
+body, html {
+  height: 100%;
+}
+body {
+  margin: 0;
+}
+body, input, button {
+  font-size: 1.2em;
+}
+.full-width {
+   width: 100%;
+}
+.middle-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+.text-center {
+  text-align: center;
+}
+.error {
+  color: rgb(255, 58, 46);
+}
+.float-right {
+  float: right;
+}
+.circle-button {
+  -webkit-animation: pulse 30s infinite alternate;
+  border-radius: 75px;
+  width: 150px;
+  height: 150px;
+  outline: none;
+  border: none;
+}
+.circle-button:active {
+  -webkit-box-shadow: 0 0 10px rgba(0,0,0,0.75) inset;
+  -moz-box-shadow: 0 0 10px rgba(0,0,0,0.75) inset;
+  box-shadow: 0 0 10px rgba(0,0,0,0.75) inset;
+}
+.big-input {
+  width: 250px;
+  height: 75px;
+  text-align: center;
+}
+.vertical-gap {
+  margin: 10px 0;
+}
+@-webkit-keyframes pulse {
+  0% {background-color: 	#9400D3;}
+  17% {background-color: #4B0082;}
+  34% {background-color: #0000FF;}
+  51% {background-color: #00FF00;}
+  68% {background-color: #FFFF00;}
+  85% {background-color: #FF7F00;}
+  100% {background-color: #FF0000;}
+}
