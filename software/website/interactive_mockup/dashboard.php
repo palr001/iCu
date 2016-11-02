@@ -10,16 +10,14 @@
     </form>
     <table class="full-width">
       <tr>
-        <td>Y123</td>
+        <td>
+          <span style="background-color: red; width: 20px;"></span>
+          <span>Y123</span>
+        </td>
         <td>
           <div class="float-right">
             <form action="action.php">
               <button type="submit" name="t" value="remove_device">-</button>
-            </form>
-          </div>
-          <div class="float-right">
-            <form action="action.php">
-              <button type="submit" name="t" value="configure_message">/</button>
             </form>
           </div>
         </td>
@@ -30,11 +28,6 @@
           <div class="float-right">
             <form action="action.php">
               <button type="submit" name="t" value="remove_device">-</button>
-            </form>
-          </div>
-          <div class="float-right">
-            <form action="action.php">
-              <button type="submit" name="t" value="configure_message">/</button>
             </form>
           </div>
         </td>
