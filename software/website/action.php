@@ -4,13 +4,12 @@
 <link rel="stylesheet" href="main.css">
 <div class="middle-container">
   <div>
-    <p class="text-center">Hi T123</p>
     <form method="post" action="dashboard.php">
       <div>
-        <input type="text" id="code" class="big-input" placeholder="e.g. 6Y43">
+        <input type="text" id="code" class="big-input" value="T123">
       </div>
       <div class="vertical-gap">
-        <input type="color" id="color" class="big-input">
+        <input type="text" id="color" class="big-input" placeholder="e.g. #FF0000">
       </div>
       <div class="text-center">
         <button type="submit">Configure</button>
