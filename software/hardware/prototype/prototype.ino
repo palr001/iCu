@@ -7,9 +7,9 @@
                           // pull the pin to ground momentarily.  On a high -> low
                           // transition the button press logic will execute.
 
-#define PIXEL_PIN    D2    // Digital IO pin connected to the NeoPixels.
+#define PIN     D2    // Digital IO pin connected to the NeoPixels.
 
-#define PIXEL_COUNT 16
+#define LED_COUNT 6
 
 // Parameter 1 = number of pixels in strip,  neopixel stick has 8
 // Parameter 2 = pin number (most are valid)
@@ -18,7 +18,7 @@
 //   NEO_GRB     Pixels are wired for GRB bitstream, correct for neopixel stick
 //   NEO_KHZ400  400 KHz bitstream (e.g. FLORA pixels)
 //   NEO_KHZ800  800 KHz bitstream (e.g. High Density LED strip), correct for neopixel stick
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, PIN, NEO_GRB + NEO_KHZ400);
 
 OpenWiFi hotspot;
 
