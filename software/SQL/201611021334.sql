@@ -17,7 +17,7 @@ USE `mydb` ;
 -- -----------------------------------------------------
 -- Table `mydb`.`device`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `internet_of_things_workshop`.`device` (
+CREATE TABLE IF NOT EXISTS `mydb`.`device` (
   `id` VARCHAR(4) NOT NULL COMMENT '',
   PRIMARY KEY (`id`)  COMMENT '')
 ENGINE = InnoDB;
