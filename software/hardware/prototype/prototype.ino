@@ -11,23 +11,11 @@
 
 #define LED_COUNT 6
 
-// Parameter 1 = number of pixels in strip,  neopixel stick has 8
-// Parameter 2 = pin number (most are valid)
-// Parameter 3 = pixel type flags, add together as needed:
-//   NEO_RGB     Pixels are wired for RGB bitstream
-//   NEO_GRB     Pixels are wired for GRB bitstream, correct for neopixel stick
-//   NEO_KHZ400  400 KHz bitstream (e.g. FLORA pixels)
-//   NEO_KHZ800  800 KHz bitstream (e.g. High Density LED strip), correct for neopixel stick
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, PIN, NEO_GRB + NEO_KHZ400);
 
 OpenWiFi hotspot;
 
-// State of availability
-bool state = false;
-
-// State of button press
-int oldState;
-int newState;
+int oldTime = 0;
 
 void setup() {
   Serial.begin(115200);
@@ -39,50 +27,46 @@ void setup() {
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
 
+  String hexstring = "#FF00FF";
+
+// Get rid of '#' and convert it to integer
+int number = (int) strtol( &hexstring[1], NULL, 16);
+
+colorWipe(number);
+// Split them up into r, g, b values
+int r = number >> 16;
+int g = number >> 8 & 0xFF;
+int b = number & 0xFF;
+
+
+
   // No wifi == no lights because the program will be busy connecting
-  hotspot.begin("HomeNetwork", "HomePassword");
+  hotspot.begin("LAB", "QWERTYUIOP");
 }
 
-void loop() {
-  // Get current button state.
-  newState = digitalRead(BUTTON_PIN);
-
-  // Check if state changed from high to low (button press).
-  if (oldState == LOW && newState == HIGH) {
-    Serial.println("Send request to server");
-      
-    HTTPClient http;
-    http.begin("http://178.62.201.186/add_entry.php");
-    uint16_t httpCode = http.GET();
- 
-    if (httpCode == 200) {
-      String response;
-      response = http.getString();
-      Serial.println(response);
-    } else {
-      ESP.reset();
-    }
-      
-    http.end();
-
-    if(state) {
-      hideColor();
-      state = false;
-    } else {
-      showColor();
-      state = true;
-    }
+void loop() 
+{
+  if(digitalRead(BUTTON_PIN) == LOW)
+  {
+    sendButtonPress();
+    delay(1000);
   }
   
-  // Set the last button state to the old state.
-  oldState = newState;
+  if(millis() > oldTime + 2000)
+  {
+    requestMessage();
+    
+    oldTime = millis();
+  }
 }
 
-void hideColor() {
+void hideColor() 
+{
   colorWipe(strip.Color(0, 0, 0));
 }
 
-void showColor() {
+void showColor() 
+{
   colorWipe(strip.Color(255, 0, 0)); // Red
 }
 
@@ -93,3 +77,42 @@ void colorWipe(uint32_t c) {
     strip.show();
   }
 }
+
+void sendButtonPress()
+{
+  Serial.println("Sending button press to server");
+    HTTPClient http;
+    http.begin("http://188.166.37.131/api.php?t=sqi&d=T111");
+    uint16_t httpCode = http.GET();      
+    http.end();
+}
+
+void requestMessage()
+{
+  Serial.println("Sending request to server");
+  hideColor();
+      
+  HTTPClient http;
+  http.begin("http://188.166.37.131/api.php?t=gqi&d=T111");
+  uint16_t httpCode = http.GET();
+
+  if (httpCode == 200) 
+  {
+    String response;
+    response = http.getString();
+    Serial.println(response);
+
+    if(response == "-1")
+    {
+      Serial.println("There are no messages waiting in the queue");
+    }
+    else
+    {
+      int number = (int) strtol( &response[1], NULL, 16);
+      colorWipe(number);
+    }
+  } 
+    
+  http.end();
+}
+
