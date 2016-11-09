@@ -12,7 +12,7 @@
       <input type="hidden" name="r">
       <input type="hidden" name="d" value="<?php echo $_GET['d']; ?>">
       <div class="text-center">
-        <input name="td" type="text" value="enter ID, e.g. T111">
+        <input name="td" type="text" placeholder="enter ID, e.g. T111">
       </div>
       <div class="vertical-gap-20 text-center">
         <input name="c" type="color" value="#ff0000">
