@@ -3,6 +3,7 @@ body, html {
 }
 body {
   margin: 0;
+  font-family: 'Maven Pro', sans-serif;
 }
 body, input, button {
   font-size: 1.2em;
