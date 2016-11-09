@@ -6,10 +6,13 @@
 <div class="middle-container">
   <div>
     <!-- <p class="error text-center">"83FE" doesn't exist</p> -->
+    <h1 class="text-center">Welcome</h1>
     <form method="get" action="dashboard.php">
+      <div class="text-center vertical-gap-20">
+        <input type="text" name="d" placeholder="enter ID, e.g. T111">
+      </div>
       <div class="text-center">
-        <input type="text" name="d" placeholder="e.g. T111">
-        <button type="submit">Go</button>
+        <button type="submit" class="std-button">Go</button>
       </div>
     </form>
   </div>

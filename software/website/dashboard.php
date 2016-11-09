@@ -6,10 +6,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="main.css">
 <link href="https://fonts.googleapis.com/css?family=Maven+Pro" rel="stylesheet">
+<div id="color-container"></div>
 <div class="middle-container">
   <div>
-    <p class="text-center">Hi <?php echo $_GET['d']; ?></p>
-    <form action="device_configuration.php">
+    <h1 class="text-center">Hi <?php echo $_GET['d']; ?>,</h1>
+    <h2>how are you?</h2>
+    <form action="device_configuration.php" class="vertical-gap-20 text-center">
       <input type="hidden" name="d" value="<?php echo $_GET['d']; ?>">
       <button type="submit" class="circle-button">+</button>
     </form>
@@ -20,14 +22,14 @@
           while($row = $result->fetch_assoc()) {
             echo '<tr>
                     <td>' . $row['target_device_id'] . '</td>
-                    <td>' . $row['color'] . '</td>
+                    <td class="small-cell"><div class="color-circle" style="background-color:' . $row['color'] . ';"></div></td>
                     <td>
-                      <div class="float-right">
+                      <div class="vertical-gap-5 small-cell">
                         <form action="api.php">
                           <input type="hidden" name="r">
                           <input type="hidden" name="d" value="' . $row['device_id'] . '">
                           <input type="hidden" name="td" value="' . $row['target_device_id'] . '">
-                          <button type="submit" name="t" value="rdc">-</button>
+                          <button type="submit" name="t" value="rdc" class="del-button">-</button>
                         </form>
                       </div>
                     </td>
