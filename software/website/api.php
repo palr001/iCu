@@ -16,6 +16,10 @@
     switch($arr['t']) {
       case 'sdc': // device configuration
         if(isset($arr['c']) && isset($arr['td'])) {
+          if($arr['c']) == 3 || $arr['c'] == 6) {
+            $arr['c'] += '#' + $arr['c'];
+          }
+
           // Check if exists
           $sql = "SELECT * FROM device_configuration WHERE device_id = '" . $arr['d'] . "' AND target_device_id = '" . $arr['td'] . "'";
           if ($result = $connection->query($sql)) {
