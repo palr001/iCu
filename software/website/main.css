@@ -88,8 +88,10 @@ input[type="text"] {
   border-radius: 50%;
   width: 100px;
   height: 100px;
+  padding: 13px 0;
   line-height: 1.0;
   margin: 0 auto;
+  vertical-align: middle;
   display: block;
   text-align: center;
   outline: none;
