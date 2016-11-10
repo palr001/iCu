@@ -5,6 +5,7 @@
 <title>Device Configuration - IoT Workshop</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="main.css">
+<link rel="stylesheet" href="normalize.css">
 <link href="https://fonts.googleapis.com/css?family=Maven+Pro" rel="stylesheet">
 <script src="jscolor.min.js"></script>
 <div class="middle-container">
@@ -15,7 +16,7 @@
       <div class="text-center">
         <input name="td" type="text" placeholder="enter ID, e.g. T111">
       </div>
-      <div class="vertical-gap-20 text-center">
+      <div class="vertical-gap-30 text-center">
         <input name="c" type="text" class="jscolor" value="#ff0000">
       </div>
       <div class="text-center">

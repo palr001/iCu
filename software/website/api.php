@@ -16,8 +16,9 @@
     switch($arr['t']) {
       case 'sdc': // device configuration
         if(isset($arr['c']) && isset($arr['td'])) {
+          // Quick fix for color picker without hashtag
           if(strlen($arr['c']) == 3 || strlen($arr['c']) == 6) {
-            $arr['c'] = '#' + $arr['c'];
+            $arr['c'] = '#' . $arr['c'];
           }
 
           // Check if exists
