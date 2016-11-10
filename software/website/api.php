@@ -16,8 +16,8 @@
     switch($arr['t']) {
       case 'sdc': // device configuration
         if(isset($arr['c']) && isset($arr['td'])) {
-          if($arr['c']) == 3 || $arr['c'] == 6) {
-            $arr['c'] += '#' + $arr['c'];
+          if(count($arr['c']) == 3 || count($arr['c'] == 6)) {
+            $arr['c'] = '#' + $arr['c'];
           }
 
           // Check if exists
