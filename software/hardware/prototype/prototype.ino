@@ -155,6 +155,8 @@ void loop()
   if (servoTimer > 17) {
     int pos = map(v.x, -255, 255, 10, 170);
     myservo.write(pos);              // tell servo to go to position in variable 'pos'
+  }
+}
 
     void sendButtonPress() {
       Serial.println("Sending button press to server");
