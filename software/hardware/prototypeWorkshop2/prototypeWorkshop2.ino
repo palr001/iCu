@@ -1,17 +1,18 @@
-#include <OpenWiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <Adafruit_NeoPixel.h>
 #include <Servo.h>
+//wifi
+#include <ESP8266WiFi.h>          //https://github.com/esp8266/Arduino
+#include <DNSServer.h>
+#include <ESP8266WebServer.h>
+#include <WiFiManager.h>         //https://github.com/tzapu/WiFiManager
 
 #define BUTTON_PIN  D1
 #define PIN         D2
 #define LED_COUNT    6
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, PIN, NEO_GRB + NEO_KHZ400);
-
 Servo myservo;
-
-OpenWiFi hotspot;
 
 int oldTime = 0;
 String chipID;
@@ -40,7 +41,6 @@ class SpringyValue {
       x += v * dt ;
     }
 
-
     void resetServo() {
       a = 0;
       v = 0;
@@ -48,9 +48,9 @@ class SpringyValue {
     }
 };
 
+
 uint32_t LEDcolor = ESP.getChipId();
 uint32_t id = ESP.getChipId();
-
 float offset = 100;
 uint32_t milliSeconds = 0;
 SpringyValue v;
@@ -60,6 +60,7 @@ int LEDTimer = 0,
     loopDuration = 0,
     servoTimer = 0,
     servoCutOffTimer = 0;
+
 
 // LEDStrip helper to set the color of all LEDs and optionally their brightness
 void setAllPixels(uint8_t r, uint8_t g, uint8_t b, int multiplier = 255) {
@@ -73,48 +74,65 @@ void setAllPixels(uint8_t r, uint8_t g, uint8_t b, int multiplier = 255) {
 }
 
 
-
-void setup()
-{
-  
+void setup() {
   id = id & 0x0000FFFF;
   chipID = String(id, HEX);
   chipID.toUpperCase();
+  String wifiNameConcat = "Connectiklaas_" + chipID;
+  char wifiName[] = "";
+  wifiNameConcat.toCharArray(wifiName, 19);
+
 
   //for debugging
   //chipID = "T111";
 
   Serial.begin(115200);
   delay(1000);
-
-  Serial.println();
-  Serial.print("Last 2 bytes of chip ID: ");
-  Serial.println(chipID);
+  Serial.print(chipID);
+  //  Serial.println();
+  //  Serial.print("Last 2 bytes of chip ID: ");
+  //  Serial.println(chipID);
 
   pinMode(BUTTON_PIN, INPUT_PULLUP);
-  Serial.begin(9600);
 
   strip.begin();
   strip.setBrightness(255);
-  colorWipe(0x00ffff);
-  strip.show();
+  colorFade(0x00ff00);
 
-  // No wifi == no lights because the program will be busy connecting
-  hotspot.begin("LAB", "QWERTYUIOP");
+  //WiFiManager
+  //Local intialization. Once its business is done, there is no need to keep it around
+  WiFiManager wifiManager;
+  //reset saved settings
+  //wifiManager.resetSettings();
+
+  //set custom ip for portal
+  //wifiManager.setAPConfig(IPAddress(10,0,1,1), IPAddress(10,0,1,1), IPAddress(255,255,255,0));
+
+  //fetches ssid and pass from eeprom and tries to connect
+  //if it does not connect it starts an access point with the specified name
+  //here  "AutoConnectAP"
+  //and goes into a blocking loop awaiting configuration
+  wifiManager.autoConnect(wifiName);
+  //wifiManager.autoConnect();
+
+  //if you get here you have connected to the WiFi
+  Serial.println("connected...yeey :)");
+  colorFade(0xff0000);
+  delay(500);
+  hideColor();
+  delay(500);
 }
 
-void loop()
-{
+
+void loop() {
   // timekeeping
   milliSeconds = millis();
   loopDuration = milliSeconds - lastMillis;
   lastMillis = milliSeconds;
-
   LEDTimer += loopDuration;
   springTimer += loopDuration;
   servoTimer += loopDuration;
   servoCutOffTimer += loopDuration;
-
 
   // update the "spring" each 10 milliseconds
   if (springTimer > 10) {
@@ -130,10 +148,10 @@ void loop()
     delay(100);
   }
 
+  //cuts of power to the servo after 10 seconds to stop it from randomly twitching
   if (servoCutOffTimer > 10000) {
     myservo.detach();
     servoCutOffTimer = 0;
-    //Serial.println("done");
   }
 
   // update the LEDs every 15 milliseconds
@@ -150,16 +168,14 @@ void loop()
     myservo.write(pos);              // tell servo to go to position in variable 'pos'
   }
 
-  if (millis() > oldTime + 2000)
-  {
+  if (millis() > oldTime + 2000) {
     requestMessage();
-
     oldTime = millis();
   }
 }
 
-void sendButtonPress()
-{
+
+void sendButtonPress() {
   Serial.println("Sending button press to server");
   HTTPClient http;
   http.begin("http://188.166.37.131/api.php?t=sqi&d=" + chipID);
@@ -167,8 +183,8 @@ void sendButtonPress()
   http.end();
 }
 
-void requestMessage()
-{
+
+void requestMessage() {
   Serial.println("Sending request to server");
   hideColor();
 
@@ -176,59 +192,52 @@ void requestMessage()
   http.begin("http://188.166.37.131/api.php?t=gqi&d=" + chipID);
   uint16_t httpCode = http.GET();
 
-  if (httpCode == 200)
-  {
+  if (httpCode == 200) {
     String response;
     response = http.getString();
     //Serial.println(response);
 
-    if (response == "-1")
-    {
+    if (response == "-1") {
       Serial.println("There are no messages waiting in the queue");
     }
-    else
-    {
+    else {
       int number = (int) strtol( &response[1], NULL, 16);
       LEDcolor = number;
     }
   }
-  else
-  {
+  else {
     ESP.reset();
   }
-
   http.end();
 }
 
-void hideColor()
-{
+//Turns off the LEDstrip
+void hideColor() {
   colorWipe(strip.Color(0, 0, 0));
 }
 
-void showColor()
-{
-  colorWipe(strip.Color(255, 0, 0)); // Red
+//Makes the LEDstrip turn green
+void showColor() {
+  colorWipe(strip.Color(255, 0, 0)); // Green 
 }
 
-void colorWipe(uint32_t c)
-{
-  for (uint16_t i = 0; i < strip.numPixels(); i++)
-  {
+//Sets all the GBR LED's to the color given, i has to loop through all the leds to change them all
+void colorWipe(uint32_t c) {
+  for (uint16_t i = 0; i < strip.numPixels(); i++) {
     strip.setPixelColor(i, c);
   }
   strip.show();
 }
 
-void colorFade(uint32_t c)
-{
-  Serial.println(c);
+//Color fading effect
+void colorFade(uint32_t c) {
+  //Serial.println(c);
 
   byte red = (c >> 16) & 0xff;
   byte green = (c >> 8) & 0xff;
   byte blue = c & 0xff;
 
-  for (int j = 0; j < 100; j++)
-  {
+  for (int j = 0; j < 100; j++) {
     float multiplier = ((float)j) / 100.0;
     float r = (float)red * multiplier;
     float g = (float)green * multiplier;
@@ -236,32 +245,26 @@ void colorFade(uint32_t c)
 
     setAllPixels(r, g, b, abs(v.x));
   }
-  /*
-      for (uint16_t i = 0; i < strip.numPixels(); i++)
-      {
-        strip.setPixelColor(i, (byte)r, (byte)g, (byte)b);
+  //
+  //      for (uint16_t i = 0; i < strip.numPixels(); i++){
+  //        strip.setPixelColor(i, (byte)r, (byte)g, (byte)b);
+  //      }
+  //
+  //      strip.show();
+  //      delay(5);
+  //
+  //    for (int j = 100; j > 0; j--){
+  //      float multiplier = ((float)j) / 100.0;
+  //      float r = (float)red * multiplier;
+  //      float g = (float)green * multiplier;
+  //      float b = (float)blue * multiplier;
+  //
+  //      for (uint16_t i = 0; i < strip.numPixels(); i++){
+  //        strip.setPixelColor(i, (byte)r, (byte)g, (byte)b);
+  //      }
+  //
+  //      strip.show();
+  //      delay(8);
+  //    }
 
-      }
-
-      strip.show();
-      delay(5);
-    }
-
-    for (int j = 100; j > 0; j--)
-    {
-      float multiplier = ((float)j) / 100.0;
-      float r = (float)red * multiplier;
-      float g = (float)green * multiplier;
-      float b = (float)blue * multiplier;
-
-      for (uint16_t i = 0; i < strip.numPixels(); i++)
-      {
-        strip.setPixelColor(i, (byte)r, (byte)g, (byte)b);
-      }
-
-      strip.show();
-      delay(8);
-    }*/
-
-  hideColor();
 }
