@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <title>API Help</title>
 <p>You can use the following parameters in a querystring:</p>
 <table>

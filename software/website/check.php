@@ -7,10 +7,9 @@ require_once('database.php');
 if(!isset($_GET['d'])) {
   redirect(ROOT);
 } else {
-  $device_id = $connection->real_escape_string($_GET['d']);
-  $sql = "SELECT * FROM device WHERE id = '" . $device_id . "'";
-  if ($result = $connection->query($sql)) {
-    if($result->num_rows == 0) {
+  $stmt = $pdo->prepare("SELECT * FROM device WHERE id = ?");
+  if ($stmt->execute([$_GET['d']])) {
+    if($stmt->rowCount() == 0) {
       header('Location: ' . ROOT);
       die();
     }

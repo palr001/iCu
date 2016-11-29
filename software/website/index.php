@@ -1,9 +1,8 @@
 <!doctype html>
 <title>IoT Workshop</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="https://fonts.googleapis.com/css?family=Maven+Pro" rel="stylesheet">
-<link rel="stylesheet" href="normalize.css">
 <link rel="stylesheet" href="main.css">
+<link href="https://fonts.googleapis.com/css?family=Maven+Pro" rel="stylesheet">
 <div class="middle-container">
   <div>
     <!-- <p class="error text-center">"83FE" doesn't exist</p> -->

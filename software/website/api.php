@@ -3,98 +3,102 @@
   require_once('util.php');
   require_once('database.php');
 
-  $response = ['status' => 0];
+  $response = -1;
 
-  $arr = [];
-  foreach($_GET as $key => $value) {
-    $arr[$key] = $connection->real_escape_string($value);
-  }
-
-  // Device id is needed for every operation
-  if(isset($arr['d']) && isset($arr['t'])) {
+  // Device id and type is needed for every operation
+  if(isset($_GET['d']) && isset($_GET['t'])) {
     // Go through all available types of operations
-    switch($arr['t']) {
-      case 'sdc': // device configuration
-        if(isset($arr['c']) && isset($arr['td'])) {
-          // Quick fix for color picker without hashtag
-          if(strlen($arr['c']) == 3 || strlen($arr['c']) == 6) {
-            $arr['c'] = '#' . $arr['c'];
-          }
+    switch($_GET['t']) {
+      case 'sdc': // set device configuration
+        // c should be hue
+        if(isset($_GET['c']) && isset($_GET['td'])) {
+          $hexcolor = hsl2hex([$_GET['c']/360, 1, 0.5]);
+          $spring = round((255 / 100) * $_GET['sc']);
+          $damp = round((255 / 100) * $_GET['dc']);
 
           // Check if exists
-          $sql = "SELECT * FROM device_configuration WHERE device_id = '" . $arr['d'] . "' AND target_device_id = '" . $arr['td'] . "'";
-          if ($result = $connection->query($sql)) {
-            if($result->num_rows > 0) {
+          $stmt = $pdo->prepare("SELECT * FROM device_configuration WHERE device_id = ? AND target_device_id = ?");
+          if ($stmt->execute([$_GET['d'], $_GET['td']])) {
+            if($stmt->rowCount() > 0) {
               // Update
-              $sql = "UPDATE device_configuration SET color = '" . $arr['c'] . "' WHERE device_id = '" . $arr['d'] . "' AND target_device_id = '" . $arr['td'] . "'";
-              if ($connection->query($sql)) {
-                $response = ['status' => 1];
-              }
+              $stmt = $pdo->prepare("UPDATE device_configuration SET color = ?, spring = ?, damp = ?, message = ? WHERE device_id = ? AND target_device_id = ?");
             } else {
               // Create
-              $sql = "INSERT INTO device_configuration(color, device_id, target_device_id) VALUES ('" . $arr['c'] . "', '" . $arr['d'] . "', '" . $arr['td'] . "')";
-              if ($connection->query($sql)) {
-                $response = ['status' => 1];
-              }
+              $stmt = $pdo->prepare("INSERT INTO device_configuration(color, spring, damp, message, device_id, target_device_id) VALUES (?, ?, ?, ?, ?, ?)");
+            }
+            if ($stmt->execute([$hexcolor, $spring, $damp, $_GET['m'], $_GET['d'], $_GET['td']])) {
+              $response = 1;
             }
           }
         }
       break;
       case 'rdc': // remove device configuration
-        if(isset($arr['td'])) {
+        if(isset($_GET['td'])) {
           // Check if exists
-          $sql = "SELECT * FROM device_configuration WHERE device_id = '" . $arr['d'] . "' AND target_device_id = '" . $arr['td'] . "'";
-          if ($connection->query($sql)) {
+          $stmt = $pdo->prepare("SELECT * FROM device_configuration WHERE device_id = ? AND target_device_id = ?");
+          if ($stmt->execute([$_GET['d'], $_GET['td']])) {
             // Remove all queue items of device and target device
-            $sql = "DELETE FROM queue WHERE device_id = '" . $arr['d'] . "' AND target_device_id = '" . $arr['td'] . "'";
-            if ($connection->query($sql)) {
+            $stmt = $pdo->prepare("DELETE FROM queue WHERE device_id = ? AND target_device_id = ?");
+            if ($stmt->execute([$_GET['d'], $_GET['td']])) {
               // Remove device configuration
-              $sql = "DELETE FROM device_configuration WHERE device_id = '" . $arr['d'] . "' AND target_device_id = '" . $arr['td'] . "'";
-              if ($connection->query($sql)) {
-                $response = ['status' => 1];
+              $stmt = $pdo->prepare("DELETE FROM device_configuration WHERE device_id = ? AND target_device_id = ?");
+              if ($stmt->execute([$_GET['d'], $_GET['td']])) {
+                $response = 1;
               }
             }
+          }
+        }
+      break;
+      case 'bdc': // blacklist device configuration
+        if(isset($_GET['td'])) {
+          // Check if exists
+          $stmt = $pdo->prepare("UPDATE device_configuration SET blacklist = ? WHERE device_id = ? AND target_device_id = ?");
+          if ($stmt->execute([$_GET['b'], $_GET['td'], $_GET['d']])) {
+            $response = 1;
           }
         }
       break;
       case 'gqi': // get queue item
           // Get queue item
-          $sql = "SELECT color FROM device_configuration WHERE target_device_id = '" . $arr['d'] . "' AND device_id" .
-		" = (SELECT device_id FROM queue WHERE target_device_id = '" . $arr['d'] . "' ORDER BY timestamp LIMIT 1)";
-          if ($queue_item = $connection->query($sql)) {
-            // Delete from queue because it's not needed anymore
-            $sql = "DELETE FROM queue WHERE target_device_id = '" . $arr['d'] . "' LIMIT 1";
-            if ($result = $connection->query($sql)) {
-              // Return queue item
-              $item = $queue_item->fetch_assoc();
-              if($item != null) {
-                $response = $item['color'];
+          $stmt = $pdo->prepare("SELECT * FROM device_configuration WHERE target_device_id = ? AND device_id" .
+		" = (SELECT device_id FROM queue WHERE target_device_id = ? ORDER BY timestamp LIMIT 1)");
+          if($stmt->execute([$_GET['d'], $_GET['d']])) {
+            if ($stmt->rowCount() == 1) {
+              $dc = $stmt->fetch();
+              // Delete from queue because it's not needed anymore
+              $stmt = $pdo->prepare("DELETE FROM queue WHERE target_device_id = ? LIMIT 1");
+              if ($stmt->execute([$_GET['d']])) {
+                // Return queue item
+                // We need this check because workshop 1 hardware isn't compatible with a response of more than the color
+                if(isset($_GET['v']) && $_GET['v'] == '2') {
+                  $response = $dc['color'] . ',' . $dc['spring'] . ',' . $dc['damp'] . ',' . $dc['message'];
+                } else {
+                  $response = $dc['color'];
+                }
               } else {
                 $response = -1;
               }
-            } else {
-              $response = -1;
-            }
+          }
         }
       break;
       case 'sqi': // set queue item
-        $sql = "SELECT * FROM device_configuration WHERE device_id = '" . $arr['d'] . "'";
-        if($result = $connection->query($sql)) {
-          while($row = $result->fetch_assoc()) {
-            $sql = "INSERT INTO queue(device_id, target_device_id) VALUES ('" . $arr['d'] . "', '" . $row['target_device_id'] . "')";
-            if ($connection->query($sql)) {
-              // Return result
+        // Blacklisted device configuration should be able to insert something in the queue
+        $stmt = $pdo->prepare("SELECT * FROM device_configuration WHERE device_id = ? AND blacklist = 0");
+        if($stmt->execute([$_GET['d']])) {
+          $data = $stmt->fetchAll();
+          foreach($data as $row) {
+            $stmt = $pdo->prepare("INSERT INTO queue(device_id, target_device_id) VALUES (?, ?)");
+            if ($stmt->execute([$_GET['d'], $row['target_device_id']])) {
               $response = 1;
             } else {
               $response = -1;
             }
           }
-          $result->free();
         }
       break;
-      case 'id':
-      	$sql = "INSERT INTO device(id) VALUES('" . $arr['d'] . "')";
-      	if($connection->query($sql)) {
+      case 'id': // insert device
+      	$stmt = $pdo->prepare("INSERT INTO device(id) VALUES(?)");
+      	if($stmt->execute([$_GET['d']])) {
       	  $response = 1;
       	} else {
       	  $response = -1;
@@ -102,10 +106,9 @@
       break;
     }
 
-    $connection->close();
     // Parameter r can be used for redirecting
     if(isset($_GET['r'])) {
-      $location = ROOT . '/dashboard.php?d=' . $arr['d'];
+      $location = ROOT . '/dashboard.php?d=' . $_GET['d'];
       redirect($location);
     } else {
       echo $response;

@@ -6,12 +6,16 @@ $username = 'root';
 $password = '';
 $db = 'internet_of_things_workshop';
 
-$connection = new mysqli($servername, $username, $password, $db);
-
-if($connection->connect_error) {
-  die('Connection failed: ' . $connection->connect_error);
+try {
+  $pdo = new PDO(
+      'mysql:host=' . $servername . ';dbname=' . $db,
+      $username,
+      $password
+    );
+} catch(PDOException $e) {
+  die($e->getMessage());
 }
 
-return $connection;
+return $pdo;
 
 ?>
