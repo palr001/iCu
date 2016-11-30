@@ -133,12 +133,12 @@ table {
 }
 .text-container {
   border: 1px solid #454545;
-  border-radius: 10px;
+  border-radius: 2px;
   min-height: 100px;
   max-height: 200px;
   width: 200px;
   overflow: auto;
-  padding: 5px;
+  padding: 5px 15px;
 }
 .text-center { text-align: center; }
 .error { color: rgb(255, 58, 46); }
@@ -184,6 +184,16 @@ table {
   width: 250px;
   height: 75px;
   text-align: center;
+}
+.left-tbr { border-top-left-radius: 5px; }
+.left-br {
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+.right-tbr { border-top-right-radius: 5px; }
+.right-br {
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
 }
 .vertical-gap-5 { margin: 5px 0; }
 .vertical-gap-10 { margin: 10px 0; }
