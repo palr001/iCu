@@ -50,7 +50,7 @@
         }
       break;
       case 'bdc': // blacklist device configuration
-        if(isset($_GET['td'])) {
+        if(isset($_GET['td']) && isset($_GET['b'])) {
           // Check if exists
           $stmt = $pdo->prepare("UPDATE device_configuration SET blacklist = ? WHERE device_id = ? AND target_device_id = ?");
           if ($stmt->execute([$_GET['b'], $_GET['td'], $_GET['d']])) {
@@ -90,8 +90,6 @@
             $stmt = $pdo->prepare("INSERT INTO queue(device_id, target_device_id) VALUES (?, ?)");
             if ($stmt->execute([$_GET['d'], $row['target_device_id']])) {
               $response = 1;
-            } else {
-              $response = -1;
             }
           }
         }
@@ -100,15 +98,17 @@
       	$stmt = $pdo->prepare("INSERT INTO device(id) VALUES(?)");
       	if($stmt->execute([$_GET['d']])) {
       	  $response = 1;
-      	} else {
-      	  $response = -1;
       	}
       break;
     }
 
     // Parameter r can be used for redirecting
     if(isset($_GET['r'])) {
-      $location = ROOT . '/dashboard.php?d=' . $_GET['d'];
+      if($_GET['r'] == '') {
+        $location = ROOT . '/dashboard.php?d=' . $_GET['d'];
+      } else {
+        $location = ROOT . $_GET['r'];
+      }
       redirect($location);
     } else {
       echo $response;

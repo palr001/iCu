@@ -113,6 +113,15 @@ table {
   align-items: center;
   height: 100%;
 }
+.text-container {
+  border: 1px solid #454545;
+  border-radius: 10px;
+  min-height: 100px;
+  max-height: 200px;
+  width: 200px;
+  overflow: auto;
+  padding: 5px;
+}
 .text-center { text-align: center; }
 .error { color: rgb(255, 58, 46); }
 .float-right { float: right; }

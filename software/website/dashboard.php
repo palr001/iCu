@@ -62,9 +62,9 @@
                       <td>
                         <div class="vertical-gap-5 small-cell">
                           <form action="api.php">
-                            <input type="hidden" name="r">
-                            <input type="hidden" name="d" value="' . $row['device_id'] . '">
-                            <input type="hidden" name="td" value="' . $row['target_device_id'] . '">';
+                            <input type="hidden" name="r" value="/dashboard.php?d=' . $row['target_device_id'] . '&f=' . $filter_type . '#filter">
+                            <input type="hidden" name="d" value="' . $row['target_device_id'] . '">
+                            <input type="hidden" name="td" value="' . $row['device_id'] . '">';
                             if ($filter_type == 'in') {
                               echo '<input type="hidden" name="b" value="' . ($row['blacklist'] == 1 ? 0 : 1) . '">';
                               if($row['blacklist'] == 1) {
