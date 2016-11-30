@@ -1,4 +1,3 @@
-//#include <OpenWiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <Adafruit_NeoPixel.h>
 #include <Servo.h>
@@ -43,13 +42,13 @@ class SpringyValue {
       x += v * dt ;
     }
 
-
     void resetServo() {
       a = 0;
       v = 0;
       x = 0;
     }
 };
+
 
 //INITIALIZE LED COLOR VALUES BASED ON HEX ID
 uint32_t LEDcolor = ESP.getChipId();
@@ -64,56 +63,53 @@ int LEDTimer = 0,
     servoTimer = 0,
     servoCutOffTimer = 0;
 
+
 // LEDStrip helper to set the color of all LEDs and optionally their brightness
 void setAllPixels(uint8_t r, uint8_t g, uint8_t b, int multiplier = 255) {
   float brightness = (float)multiplier / 255.0;
-  for (int iPixel = 0; iPixel < LED_COUNT; iPixel++)
+  for (int iPixel = 0; iPixel < LED_COUNT; iPixel++) {
     strip.setPixelColor(iPixel,
                         (byte)((float)r * brightness),
                         (byte)((float)g * brightness),
                         (byte)((float)b * brightness));
-  strip.show();
+    strip.show();
+  }
 }
 
 
-
-void setup()
-{
-  
+void setup() {
   id = id & 0x0000FFFF;
   chipID = String(id, HEX);
   chipID.toUpperCase();
-  String wifiNameConcat = "Connectiklaas_"+ chipID;
+  String wifiNameConcat = "Connectiklaas_" + chipID;
   char wifiName[] = "";
   wifiNameConcat.toCharArray(wifiName, 19);
 
-
   Serial.begin(115200);
   delay(1000);
-  Serial.print("CHIP ID = "+chipID);
+  Serial.print("CHIP ID = " + chipID);
   Serial.println();
   Serial.print("Last 2 bytes of chip ID: ");
   Serial.println(chipID);
 
   pinMode(BUTTON_PIN, INPUT_PULLUP);
-  Serial.begin(9600);
 
-  //RELATED TO WIFI
-  WiFiManager wifiManager;
-  wifiManager.autoConnect(wifiName);
-  Serial.println("CONNECTED MOTHERFUCKER ");
-  delay(500);
-
-  //RELATED TO COLOR LED
+  //RELATED TO LED COLOR 
   strip.begin();
   strip.setBrightness(255);
-  colorWipe(0x00ffff);
   strip.show();
-  
+
+
+  //RELATED TO WIFI
+  //WiFiManager wifiManager;
+   wifiManager.resetSettings();
+  wifiManager.autoConnect(wifiName);
+  Serial.println("connected...yeey :)");
+  delay(500);
 }
 
-void loop()
-{
+
+void loop() {
   // timekeeping
   milliSeconds = millis();
   loopDuration = milliSeconds - lastMillis;
@@ -137,7 +133,7 @@ void loop()
     delay(100);
   }
 
-//CUTS OF POWER TO THE SERVO AFTER 10 SECS TO STOP IT FROM RANDOMLY TWITCHING
+  //CUTS OF POWER TO THE SERVO AFTER 10 SECS TO STOP IT FROM RANDOMLY TWITCHING
   if (servoCutOffTimer > 10000) {
     myservo.detach();
     servoCutOffTimer = 0;
@@ -157,15 +153,14 @@ void loop()
     myservo.write(pos);              // tell servo to go to position in variable 'pos'
   }
 
-  if (millis() > oldTime + 2000)
-  {
+  if (millis() > oldTime + 2000) {
     requestMessage();
     oldTime = millis();
   }
 }
 
-void sendButtonPress()
-{
+
+void sendButtonPress() {
   Serial.println("Sending button press to server");
   HTTPClient http;
   http.begin("http://188.166.37.131/api.php?t=sqi&d=" + chipID);
@@ -173,8 +168,8 @@ void sendButtonPress()
   http.end();
 }
 
-void requestMessage()
-{
+
+void requestMessage() {
   Serial.println("Sending request to server");
   hideColor();
 
@@ -182,51 +177,46 @@ void requestMessage()
   http.begin("http://188.166.37.131/api.php?t=gqi&d=" + chipID);
   uint16_t httpCode = http.GET();
 
-  if (httpCode == 200)
-  {
+  if (httpCode == 200) {
     String response;
     response = http.getString();
     //Serial.println(response);
 
-    if (response == "-1")
-    {
+    if (response == "-1") {
       Serial.println("There are no messages waiting in the queue");
     }
-    else
-    {
+    else {
       int number = (int) strtol( &response[1], NULL, 16);
       LEDcolor = number;
     }
   }
-  else
-  {
+  else {
     ESP.reset();
   }
-
   http.end();
 }
 
+
 //TURNS OFF THE LEDStrip
-void hideColor()
-{
+void hideColor() {
   colorWipe(strip.Color(0, 0, 0));
 }
 
+
 //MAKES THE LEDstrip Turn Green
-void showColor()
-{
+void showColor() {
   colorWipe(strip.Color(255, 0, 0)); // Red
 }
 
+
 //SET GBR LED´s TO GIVEN COLOR
-void colorWipe(uint32_t c)
-{
-  for (uint16_t i = 0; i < strip.numPixels(); i++)
-  {
+void colorWipe(uint32_t c) {
+  for (uint16_t i = 0; i < strip.numPixels(); i++) {
     strip.setPixelColor(i, c);
   }
   strip.show();
 }
+
 
 //FADING EFFECT
 void colorFade(uint32_t c)
@@ -235,15 +225,12 @@ void colorFade(uint32_t c)
   byte green = (c >> 8) & 0xff;
   byte blue = c & 0xff;
 
-  for (int j = 0; j < 100; j++)
-  {
+  for (int j = 0; j < 100; j++) {
     float multiplier = ((float)j) / 100.0;
     float r = (float)red * multiplier;
     float g = (float)green * multiplier;
     float b = (float)blue * multiplier;
-
     setAllPixels(r, g, b, abs(v.x));
   }
-
   hideColor();
 }
