@@ -7,7 +7,7 @@
     }
     $incoming_count = $incoming_stmt->rowCount();
     $outgoing_stmt = $pdo->prepare("SELECT * FROM device_configuration WHERE device_id = ?");
-    if(!$stmt->execute([$_GET['d']])) {
+    if(!$outgoing_stmt->execute([$_GET['d']])) {
       echo 'Something has gone wrong!';
       exit;
     }
