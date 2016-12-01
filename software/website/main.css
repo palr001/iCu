@@ -65,9 +65,12 @@ input[type=range]::-ms-thumb {
     cursor: pointer;
 }
 table {
-  border-spacing:0;
-  border-collapse:collapse;
+  border-spacing: 0;
+  border-collapse: collapse;
+  width: 200px;
 }
+table td { width: 100%; }
+table td.small-cell { white-space: nowrap; }
 .inl { display: inline; }
 .button-image { vertical-align: middle; }
 .filter-button {
@@ -76,6 +79,7 @@ table {
   color: #fff;
   padding: 5px;
   flex-grow: 1;
+  margin: 0;
 }
 .filter-button:disabled {
   background: #6c6c6c;
@@ -160,26 +164,23 @@ table {
   -webkit-animation: pulse 30s infinite alternate;
   -moz-animation: pulse 30s infinite alternate;
   animation: pulse 30s infinite alternate;
-  font-size: 5em;
   color: #FFF;
   -webkit-border-radius: 50%;
   -moz-border-radius: 50%;
   border-radius: 50%;
-  width: 100px;
-  height: 100px;
-  line-height: 1.0;
+  width: 2.7em;
+  height: 2.7em;
+  font-size: 2.7em;
+  padding: 0;
   margin: 0 auto;
-  vertical-align: middle;
-  display: block;
-  text-align: center;
   outline: none;
   border: none;
 }
 .icon {
-  margin: 0 auto;
-  background-color: none;
+  padding: 0;
   border: none;
   background-size: 25px 25px;
+  background-repeat: no-repeat;
   width: 25px;
   height: 25px;
 }
@@ -213,7 +214,6 @@ table {
 .vertical-gap-20 { margin: 20px 0; }
 .vertical-gap-30 { margin: 30px 0; }
 .vertical-gap-50 { margin: 50px 0; }
-.small-cell { width: 9px; }
 @-webkit-keyframes pulse {
   0% {background-color:	#9400D3;}
   17% {background-color: #4B0082;}

@@ -43,7 +43,7 @@
     <div class="vertical-gap-30 text-center">
       <form action="device_configuration.php" class="inl">
         <input type="hidden" name="d" value="<?php echo $_GET['d']; ?>">
-        <button type="submit" class="circle-button">+</button>
+        <button type="submit" class="circle-button"><span>+</span></button>
       </form>
     </div>
     <form id="filter" action="#filter" class="middle-container">
@@ -55,7 +55,7 @@
           <img src="img/icon_incoming.png" width="17" height="17" class="button-image"> (<?php echo $incoming_count; ?>)
         </button>
     </form>
-    <table class="full-width">
+    <table>
       <?php
       // Display default the outgoing connections, else the displayed connections are based on the filter (in or out)
             foreach($stmt->fetchAll() as $row) {

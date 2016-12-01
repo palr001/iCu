@@ -29,6 +29,7 @@
     <form action="api.php">
       <input type="hidden" name="r">
       <input type="hidden" name="d" value="<?php echo $_GET['d']; ?>">
+      <input type="hidden" name="cv" value="hue">
       <div class="text-center">
         <input name="td" type="text" placeholder="enter ID, e.g. T111" value="<?php echo $target_device_id; ?>">
       </div>

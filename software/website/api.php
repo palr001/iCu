@@ -12,23 +12,45 @@
       case 'sdc': // set device configuration
         // c should be hue
         if(isset($_GET['c']) && isset($_GET['td'])) {
-          $hexcolor = hsl2hex([$_GET['c']/360, 1, 0.5]);
-          $spring = round((255 / 100) * $_GET['sc']);
-          $damp = round((255 / 100) * $_GET['dc']);
+          // When color value is higher than 3 we interpret it as hex
+          if(isset($_GET['cv']) && $_GET['cv'] == 'hue') {
+            $hexcolor = hsl2hex([$_GET['c']/360, 1, 0.5]);
+          } else {
+            $hexcolor = '#' . validate_hex($_GET['c']);
+          }
+
+          // Spring constant (optional)
+          if(isset($_GET['sc'])) {
+            $spring = round((255 / 100) * $_GET['sc']);
+          }
+          // Damp constant (optional)
+          if(isset($_GET['dc'])) {
+            $damp = round((255 / 100) * $_GET['dc']);
+          }
+          // Message (optional)
+          if(isset($_GET['m'])) {
+            $message = $_GET['m'];
+          }
 
           // Check if exists
           $stmt = $pdo->prepare("SELECT * FROM device_configuration WHERE device_id = ? AND target_device_id = ?");
           if ($stmt->execute([$_GET['d'], $_GET['td']])) {
             if($stmt->rowCount() > 0) {
+              // Determine which fields to update
+              $data = $stmt->fetch();
+              $spring = isset($spring) ? $spring : $data['spring'];
+              $damp = isset($damp) ? $damp : $data['damp'];
+              $message = isset($message) ? $message : $data['message'];
+
               // Update
               $stmt = $pdo->prepare("UPDATE device_configuration SET color = ?, spring = ?, damp = ?, message = ? WHERE device_id = ? AND target_device_id = ?");
             } else {
               // Create
               $stmt = $pdo->prepare("INSERT INTO device_configuration(color, spring, damp, message, device_id, target_device_id) VALUES (?, ?, ?, ?, ?, ?)");
             }
-            if ($stmt->execute([$hexcolor, $spring, $damp, $_GET['m'], $_GET['d'], $_GET['td']])) {
-              $response = 1;
-            }
+          }
+          if ($stmt->execute([$hexcolor, $spring, $damp, $message, $_GET['d'], $_GET['td']])) {
+            $response = 1;
           }
         }
       break;
