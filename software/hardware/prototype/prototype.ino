@@ -45,6 +45,7 @@ int oldTime = 0;
 int oscillationTime = 500;
 String chipID;
 char chipIdArray[5] = {};
+String webURL = "http://thingscon16.futuretechnologies.nl";
 
 void setAllPixels(uint8_t r, uint8_t g, uint8_t b, float multiplier);
 
@@ -77,9 +78,13 @@ void setup()
   Serial.println();
   Serial.print("Last 2 bytes of chip ID: ");
   Serial.println(chipID);
+
+  String wifiNameConcat = "ConnectiKlaas_" + chipID;
+  char wifiName[19] = {};
+  wifiNameConcat.toCharArray(wifiName, 19);
   
   setAllPixels(0,255,255,1.0);
-  wifiManager.autoConnect(chipIdArray);
+  wifiManager.autoConnect(wifiName);
   fadeBrightness(0,255,255,1.0);
   myServo.attach(D7);
 }
@@ -158,7 +163,7 @@ void sendButtonPress()
 {
     Serial.println("Sending button press to server");
     HTTPClient http;
-    http.begin("http://188.166.37.131/api.php?t=sqi&d=" + chipID);
+    http.begin(webURL + "/api.php?t=sqi&d=" + chipID);
     uint16_t httpCode = http.GET();      
     http.end();
 }
@@ -169,7 +174,7 @@ void requestMessage()
   hideColor();
       
   HTTPClient http;
-  http.begin("http://188.166.37.131/api.php?t=gqi&d=" + chipID + "&v=2");
+  http.begin(webURL + "/api.php?t=gqi&d=" + chipID + "&v=2");
   uint16_t httpCode = http.GET();
 
   if (httpCode == 200) 
