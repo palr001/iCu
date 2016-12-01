@@ -1,5 +1,14 @@
 <?php
   require_once('check.php');
+  if(!isset($_GET['td'])) {
+      echo 'Target device id not found!';
+      exit;
+  }
+  $stmt = $pdo->prepare("SELECT message FROM device_configuration WHERE device_id = ? AND target_device_id = ?");
+  if(!$stmt->execute([$_GET['td'], $_GET['d']])) {
+    echo 'Something has gone wrong!';
+    exit;
+  }
 ?>
 <!doctype html>
 <title>IoT Workshop</title>
@@ -12,12 +21,9 @@
     <h2 class="text-center">message of <?php echo $_GET['td']; ?></h2>
     <div class="vertical-gap-30 text-container">
     <?php
-    $stmt = $pdo->prepare("SELECT message FROM device_configuration WHERE device_id = ? AND target_device_id = ?");
-    if($stmt->execute([$_GET['td'], $_GET['d']])) {
-      if($stmt->rowCount() == 1) {
-        $row = $stmt->fetch();
-        echo $row['message'];
-      }
+    if($stmt->rowCount() == 1) {
+      $row = $stmt->fetch();
+      echo $row['message'];
     }
     ?>
     </div>

@@ -1,18 +1,23 @@
 <?php
   require_once('check.php');
+  $spring = 50;
+  $damp = 50;
+  $color = 180;
+  $message = '';
+  $target_device_id = '';
   if(isset($_GET['d']) && isset($_GET['td'])) {
-  $stmt = $pdo->prepare("SELECT * FROM device_configuration WHERE device_id = ? AND target_device_id = ?");
-  if ($stmt->execute([$_GET['d'], $_GET['td']])) {
-    if($stmt->rowCount() > 0) {
-      $data = $stmt->fetch();
-      $target_device_id = $data['target_device_id'];
-      $color = round(360 * hex2hsl($data['color'])[0]);
-      $spring = round((100 / 255) * $data['spring']);
-      $damp = round((100 / 255) * $data['damp']);
-      $message = $data['message'];
+    $stmt = $pdo->prepare("SELECT * FROM device_configuration WHERE device_id = ? AND target_device_id = ?");
+    if ($stmt->execute([$_GET['d'], $_GET['td']])) {
+      if($stmt->rowCount() > 0) {
+        $data = $stmt->fetch();
+        $target_device_id = $data['target_device_id'];
+        $color = round(360 * hex2hsl($data['color'])[0]);
+        $spring = round((100 / 255) * $data['spring']);
+        $damp = round((100 / 255) * $data['damp']);
+        $message = $data['message'];
+      }
     }
   }
-}
 ?>
 <!doctype html>
 <title>Device Configuration - IoT Workshop</title>
@@ -25,29 +30,29 @@
       <input type="hidden" name="r">
       <input type="hidden" name="d" value="<?php echo $_GET['d']; ?>">
       <div class="text-center">
-        <input name="td" type="text" placeholder="enter ID, e.g. T111" value="<?php echo (isset($target_device_id) ? $target_device_id : '') ?>">
+        <input name="td" type="text" placeholder="enter ID, e.g. T111" value="<?php echo $target_device_id; ?>">
       </div>
       <div class="vertical-gap-30">
-        <div id="colorPickerValue" class="color-value" style="background-color: hsl(<?php echo (isset($color) ? $color : '180') ?>, 100%, 50%)"></div>
-        <input name="c" type="range" min="0" max="359" value="<?php echo (isset($color) ? $color : '180') ?>" class="color-picker" id="colorPicker">
-      </div>
-      <div class="vertical-gap-30">
-        <div class="text-center">
-          <label>Spring constant: <span id="springConstantRangeValue"><?php echo (isset($spring) ? $spring : '50') ?></span>%</label>
-        </div>
-        <input name="sc" type="range" min="0" max="100" value="<?php echo (isset($spring) ? $spring : '') ?>" step="1" id="springConstantRange">
+        <div id="colorPickerValue" class="color-value" style="background-color: hsl(<?php echo $color; ?>, 100%, 50%)"></div>
+        <input name="c" type="range" min="0" max="359" value="<?php echo $color; ?>" class="color-picker" id="colorPicker">
       </div>
       <div class="vertical-gap-30">
         <div class="text-center">
-          <label>Damp constant: <span id="dampConstantRangeValue"><?php echo (isset($damp) ? $damp : '50') ?></span>%</label>
+          <label>Spring constant: <span id="springConstantRangeValue"><?php echo $spring; ?></span>%</label>
         </div>
-        <input name="dc" type="range" min="0" max="100" value="<?php echo (isset($damp) ? $damp : '') ?>" step="1" id="dampConstantRange">
+        <input name="sc" type="range" min="0" max="100" value="<?php echo $spring; ?>" step="1" id="springConstantRange">
+      </div>
+      <div class="vertical-gap-30">
+        <div class="text-center">
+          <label>Damp constant: <span id="dampConstantRangeValue"><?php echo $damp; ?></span>%</label>
+        </div>
+        <input name="dc" type="range" min="0" max="100" value="<?php echo $damp; ?>" step="1" id="dampConstantRange">
       </div>
       <div class="vertical-gap-30">
         <div class="text-center">
           <label for="message">Sinterklaas poem:</label>
         </div>
-        <textarea name="m" id="message" rows="5"><?php echo (isset($message) ? $message : '') ?></textarea>
+        <textarea name="m" id="message" rows="5"><?php echo $message; ?></textarea>
       </div>
       <div class="text-center">
         <button type="submit" name="t" value="sdc" class="std-button">Configure</button>

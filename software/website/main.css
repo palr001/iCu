@@ -14,7 +14,7 @@ body {
 }
 body,
 button,
-input {
+input[type="text"] {
   font-size: 1.0em;
   color: #454545;
 }
@@ -50,13 +50,30 @@ input[type="range"]::-webkit-slider-thumb {
     background: #FFF;
     cursor: pointer;
 }
+input[type=range]::-moz-range-thumb {
+  -webkit-appearance: none;
+    border: 1px solid #333;
+    height: 15px;
+    width: 15px;
+    border-radius: 50%;
+    background: #FFF;
+    cursor: pointer;
+}
+input[type=range]::-ms-thumb {
+  -webkit-appearance: none;
+    border: 1px solid #333;
+    height: 15px;
+    width: 15px;
+    border-radius: 50%;
+    background: #FFF;
+    cursor: pointer;
+}
 table {
   border-spacing:0;
   border-collapse:collapse;
 }
-.button-image {
-   vertical-align: middle;
-}
+.inl { display: inline; }
+.button-image { vertical-align: middle; }
 .filter-button {
   background: #bdbdbd;
   border: 1px solid #bdbdbd;
