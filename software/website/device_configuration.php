@@ -38,13 +38,13 @@
       </div>
       <div class="vertical-gap-30">
         <div class="text-center">
-          <label>Spring constant: <span id="springConstantRangeValue"><?php echo $spring; ?></span>%</label>
+          <label>Aliveness: <span id="springConstantRangeValue"><?php echo $spring; ?></span>%</label>
         </div>
         <input name="sc" type="range" min="0" max="100" value="<?php echo $spring; ?>" step="1" id="springConstantRange">
       </div>
       <div class="vertical-gap-30">
         <div class="text-center">
-          <label>Damp constant: <span id="dampConstantRangeValue"><?php echo $damp; ?></span>%</label>
+          <label>Laziness: <span id="dampConstantRangeValue"><?php echo $damp; ?></span>%</label>
         </div>
         <input name="dc" type="range" min="0" max="100" value="<?php echo $damp; ?>" step="1" id="dampConstantRange">
       </div>
