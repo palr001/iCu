@@ -1,44 +1,21 @@
-#include <OpenWiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <Adafruit_NeoPixel.h>
-<<<<<<< HEAD
-=======
 #include <Servo.h>
->>>>>>> a30ebd8bd01c71885ef40aabfa12442a18ae9822
+#include <DNSServer.h>
+#include <ESP8266WebServer.h>
+#include <ESP8266WiFi.h>
+#include <WiFiManager.h> 
 
-#define BUTTON_PIN  D1
-#define PIN         D2
-#define LED_COUNT    6
-
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, PIN, NEO_GRB + NEO_KHZ400);
-
-OpenWiFi hotspot;
-
-<<<<<<< HEAD
-int oldTime = 0;
-String chipID;
-
-void setup()
+class SpringyValue 
 {
-=======
-Servo myservo;
-int oldTime = 0;
-String chipID;
-
-// This represents a value that, when updated repratedly, simulates a dampened spring
-// See: https://en.wikipedia.org/wiki/Harmonic_oscillator
-class SpringyValue {
   public:
     float x = 0, v = 0, a = 0, // x (value), v (velocity) and a (acceleration) define the state of the system
           o = 0, // o defines the temporary spring offset w.r.t. its resting position
-          c = 1000.0, k = 5, m = 1.0; // c (spring constant), k (damping constant) and m (mass) define the behavior of the system
-    //range c (100->1000); range k (0.1->25)
+          c = 20.0, k = 1.5, m = 1.0; // c (spring constant), k (damping constant) and m (mass) define the behavior of the system
 
     // Perturb the system to change the "length" of the spring temporarlily
     void perturb(float offset) {
-      this->x = offset;
-      this->v = 0;
-      this->a = 0;
+      this->o = offset;
     }
 
     // Call "update" every now and then to update the system
@@ -46,104 +23,143 @@ class SpringyValue {
     void update(float dt) {
       a = (-c * x - k * v ) / m;
       v += a * dt;
-      x += v * dt ;
-    }
-
-
-    void resetServo() {
-      a = 0;
-      v = 0;
-      x = 0;
+      x += v * dt + o;
+      o = 0; // a spring offet only takes one frame
     }
 };
 
 
-// LEDStrip helper to set the color of all LEDs and optionally their brightness
-void setAllPixels(uint8_t r, uint8_t g, uint8_t b, int multiplier = 255) {
-  float brightness = (float)multiplier / 255.0;
-  for (int LED = 0; LED < LED_COUNT; LED++) {
-    strip.setPixelColor(LED,
-                        (byte)((float)r * brightness),
-                        (byte)((float)g * brightness),
-                        (byte)((float)b * brightness));
-    strip.show();
-  }
-}
+#define BUTTON_PIN  D1
+#define PIN         D2   
+#define LED_COUNT    6
 
-float offset = 100;
-uint32_t milliSeconds = 0;
-SpringyValue v;
-int LEDTimer = 0,
-    springTimer = 0,
-    lastMillis = 0,
-    loopDuration = 0,
-    servoTimer = 0,
-    servoCutOffTimer = 0;
+#define fadeInDelay  5
+#define fadeOutDelay 8
 
+#define requestDelay 2000
 
-void setup() {
->>>>>>> a30ebd8bd01c71885ef40aabfa12442a18ae9822
-  uint32_t id = ESP.getChipId();
-  id = id & 0x0000FFFF;
-  chipID = String(id, HEX);
-  chipID.toUpperCase();
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, PIN, NEO_GRB + NEO_KHZ400);
+Servo myServo;
 
-  //for debugging
-  //chipID = "T111";
+int oldTime = 0;
+int oscillationTime = 500;
+String chipID;
+char chipIdArray[5] = {};
 
+void setAllPixels(uint8_t r, uint8_t g, uint8_t b, float multiplier);
+
+void setup() 
+{
+  configureChipID();
+  strip.begin();
+  strip.setBrightness(255);
+  WiFiManager wifiManager;
   Serial.begin(115200);
+
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  int counter = 0;
+  while(digitalRead(BUTTON_PIN) == LOW)
+  {
+    counter++;
+    delay(10);
+
+    if(counter > 500)
+    {
+      wifiManager.resetSettings();
+      Serial.println("Remove all wifi settings!");
+      setAllPixels(255,0,0,1.0);
+      fadeBrightness(255,0,0,1.0);
+      ESP.reset();
+    }
+  }
   delay(1000);
 
   Serial.println();
   Serial.print("Last 2 bytes of chip ID: ");
   Serial.println(chipID);
-
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
-
-  strip.begin();
-  strip.setBrightness(255);
-<<<<<<< HEAD
-  colorWipe(0x00ffff);
-=======
-  //colorWipe(0x00ffff);
->>>>>>> a30ebd8bd01c71885ef40aabfa12442a18ae9822
-  strip.show();
-
-  // No wifi == no lights because the program will be busy connecting
-  hotspot.begin("LAB", "QWERTYUIOP");
+  
+  setAllPixels(0,255,255,1.0);
+  wifiManager.autoConnect(chipIdArray);
+  fadeBrightness(0,255,255,1.0);
+  myServo.attach(D7);
 }
 
-void loop()
+void setAllPixels(uint8_t r, uint8_t g, uint8_t b, float multiplier = 1.0) 
 {
-<<<<<<< HEAD
-  if(digitalRead(BUTTON_PIN) == LOW)
-=======
-  if (digitalRead(BUTTON_PIN) == LOW)
->>>>>>> a30ebd8bd01c71885ef40aabfa12442a18ae9822
+  for (int iPixel = 0; iPixel < LED_COUNT; iPixel++)
+    strip.setPixelColor(iPixel,
+                        (byte)((float)r * multiplier),
+                        (byte)((float)g * multiplier),
+                        (byte)((float)b * multiplier));
+  strip.show();
+}
+
+//This method starts an oscillation movement in both the LED and servo
+void oscillate(float springConstant, float dampConstant, int c)
+{
+  SpringyValue spring;
+  
+  byte red = (c >> 16) & 0xff;
+  byte green = (c >> 8) & 0xff;
+  byte blue = c & 0xff;
+  
+  spring.c = springConstant;
+  spring.k = dampConstant / 100;
+  spring.perturb(255);
+
+  //Start oscillating
+  for(int i = 0; i < oscillationTime; i++)
   {
+    spring.update(0.01);
+    setAllPixels(red, green, blue, abs(spring.x) / 255.0);
+    myServo.write(90 + spring.x/4); 
+
+    //Check for button press
+    if(digitalRead(BUTTON_PIN) == LOW)
+    {
+      //Fade the current color out
+      fadeBrightness(red, green, blue, abs(spring.x) / 255.0);
+      return;
+    }
+    delay(10);
+  }
+  fadeBrightness(red, green, blue, abs(spring.x) / 255.0);
+}
+
+//This method grabs the current RGB values and current brightness and fades the colors to black
+void fadeBrightness(uint8_t r, uint8_t g, uint8_t b, float currentBrightness)
+{
+    for(float j = currentBrightness; j > 0.0; j-=0.01)
+    {
+          setAllPixels(r, g, b, j);
+          delay(20);
+    }
+    hideColor();
+}
+
+void loop() 
+{
+  //Check for button press
+  if(digitalRead(BUTTON_PIN) == LOW)
+  {    
     sendButtonPress();
-    delay(1000);
+    delay(250);
   }
 
-<<<<<<< HEAD
-  if(millis() > oldTime + 2000)
-=======
-  if (millis() > oldTime + 2000)
->>>>>>> a30ebd8bd01c71885ef40aabfa12442a18ae9822
+  //Every requestDelay, send a request to the server
+  if(millis() > oldTime + requestDelay)
   {
     requestMessage();
-
     oldTime = millis();
   }
-<<<<<<< HEAD
 }
 
 void sendButtonPress()
 {
-  Serial.println("Sending button press to server");
+    Serial.println("Sending button press to server");
     HTTPClient http;
     http.begin("http://188.166.37.131/api.php?t=sqi&d=" + chipID);
-    uint16_t httpCode = http.GET();
+    uint16_t httpCode = http.GET();      
     http.end();
 }
 
@@ -151,16 +167,16 @@ void requestMessage()
 {
   Serial.println("Sending request to server");
   hideColor();
-
+      
   HTTPClient http;
-  http.begin("http://188.166.37.131/api.php?t=gqi&d=" + chipID);
+  http.begin("http://188.166.37.131/api.php?t=gqi&d=" + chipID + "&v=2");
   uint16_t httpCode = http.GET();
 
-  if (httpCode == 200)
+  if (httpCode == 200) 
   {
     String response;
     response = http.getString();
-    Serial.println(response);
+    //Serial.println(response);
 
     if(response == "-1")
     {
@@ -168,206 +184,80 @@ void requestMessage()
     }
     else
     {
+      //Get the indexes of some commas, will be used to split strings
+      int firstComma = response.indexOf(',');
+      int secondComma = response.indexOf(',', firstComma+1);
+      int thirdComma = response.indexOf(',', secondComma+1);
+      
+      //Parse data as strings
+      String hexColor = response.substring(0,7);
+      String springConstant = response.substring(firstComma+1,secondComma);
+      String dampConstant = response.substring(secondComma+1,thirdComma);;
+      String message = response.substring(thirdComma+1,response.length());;
+
+      Serial.println("Message received from server: \n");
+      Serial.println("Hex color received: " + hexColor);
+      Serial.println("Spring constant received: " + springConstant);
+      Serial.println("Damp constant received: " + dampConstant);
+      Serial.println("Message received: " + message);
+
+      //Extract the hex color and fade the led strip
       int number = (int) strtol( &response[1], NULL, 16);
-      colorFade(number);
+      oscillate(springConstant.toFloat(), dampConstant.toFloat(), number);
     }
   }
   else
   {
-    ESP.reset();
+    ESP.reset(); 
   }
-
+    
   http.end();
 }
 
-void hideColor()
+void hideColor() 
 {
   colorWipe(strip.Color(0, 0, 0));
 }
 
-void showColor()
+void colorWipe(uint32_t c) 
 {
-  colorWipe(strip.Color(255, 0, 0)); // Red
-}
-
-void colorWipe(uint32_t c)
-{
-  for(uint16_t i=0; i<strip.numPixels(); i++)
+  for(uint16_t i=0; i<strip.numPixels(); i++) 
   {
     strip.setPixelColor(i, c);
   }
   strip.show();
 }
 
-void colorFade(uint32_t c)
+void configureChipID()
 {
-  byte red = (c >> 16) & 0xff;
-  byte green = (c >> 8) & 0xff;
-  byte blue = c & 0xff;
+  uint32_t id = ESP.getChipId();
+  byte lower = id & 0xff;
+  byte upper = (id >> 8) & 0xff;
 
-  for(int j = 0; j < 100; j++)
+  String l = "";
+  String u = "";
+
+  if(lower < 10)
   {
-    float multiplier = ((float)j)/100.0;
-    float r = (float)red*multiplier;
-    float g = (float)green*multiplier;
-    float b = (float)blue*multiplier;
-
-    for(uint16_t i=0; i<strip.numPixels(); i++)
-    {
-      strip.setPixelColor(i, (byte)r,(byte)g,(byte)b);
-    }
-
-    strip.show();
-    delay(5);
+    l = "0" + String(lower, HEX);
   }
-
-  for(int j = 100; j > 0; j--)
+  else
   {
-    float multiplier = ((float)j)/100.0;
-    float r = (float)red*multiplier;
-    float g = (float)green*multiplier;
-    float b = (float)blue*multiplier;
-
-    for(uint16_t i=0; i<strip.numPixels(); i++)
-    {
-      strip.setPixelColor(i, (byte)r,(byte)g,(byte)b);
-    }
-
-    strip.show();
-    delay(8);
+    l = String(lower, HEX);
   }
 
-hideColor();
-}
-=======
-
-  // timekeeping
-  milliSeconds = millis();
-  loopDuration = milliSeconds - lastMillis;
-  lastMillis = milliSeconds;
-
-  LEDTimer += loopDuration;
-  springTimer += loopDuration;
-  servoTimer += loopDuration;
-  servoCutOffTimer += loopDuration;
-
-
-  // update the "spring" each 10 milliseconds
-  if (springTimer > 10) {
-    v.update(0.01);
-    springTimer = 0;
+  if(upper < 10)
+  {
+    u = "0" + String(upper, HEX);
   }
-
-  // strecth the "spring"
-  if (digitalRead(BUTTON_PIN) == LOW) {
-    myservo.attach(D7);  // attaches the servo on pin 9 to the servo object
-    v.perturb(offset);
-    delay(100);
+  else
+  {
+    u = String(upper, HEX);
   }
-
-  if (servoCutOffTimer > 10000) {
-    myservo.detach();
-    servoCutOffTimer = 0;
-    Serial.println("done");
-  }
-
-  // update the LEDs every 15 milliseconds
-  if (LEDTimer > 15) {
-    // Use the absolute spring offset instead of the relative to determine brightness
-    // There's no such thing as negative brightness
-    setAllPixels(255, 255, 0, abs(v.x));
-    strip.show();
-    LEDTimer = 0;
-  }
-
-  if (servoTimer > 17) {
-    int pos = map(v.x, -255, 255, 10, 170);
-    myservo.write(pos);              // tell servo to go to position in variable 'pos'
-  }
+ 
+  chipID = u + l;
+  chipID.toUpperCase();
+  chipID.toCharArray(chipIdArray, 5);
 }
 
-    void sendButtonPress() {
-      Serial.println("Sending button press to server");
-      HTTPClient http;
-      http.begin("http://188.166.37.131/api.php?t=sqi&d=" + chipID);
-      uint16_t httpCode = http.GET();
-      http.end();
-    }
 
-    void requestMessage() {
-      Serial.println("Sending request to server");
-      hideColor();
-
-      HTTPClient http;
-      http.begin("http://188.166.37.131/api.php?t=gqi&d=" + chipID);
-      uint16_t httpCode = http.GET();
-
-      if (httpCode == 200) {
-        String response;
-        response = http.getString();
-        Serial.println(response);
-
-        if (response == "-1") {
-          Serial.println("There are no messages waiting in the queue");
-        }
-        else {
-          int number = (int) strtol( &response[1], NULL, 16);
-          colorFade(number);
-        }
-      }
-      else {
-        ESP.reset();
-      }
-      http.end();
-    }
-
-    void hideColor() {
-      colorWipe(strip.Color(0, 0, 0));
-    }
-
-    void showColor() {
-      colorWipe(strip.Color(255, 0, 0)); // Red
-    }
-
-    void colorWipe(uint32_t c) {
-      for (uint16_t i = 0; i < strip.numPixels(); i++) {
-        strip.setPixelColor(i, c);
-      }
-      strip.show();
-    }
-
-    void colorFade(uint32_t c) {
-      byte red = (c >> 16) & 0xff;
-      byte green = (c >> 8) & 0xff;
-      byte blue = c & 0xff;
-
-      for (int j = 0; j < 100; j++) {
-        float multiplier = ((float)j) / 100.0;
-        float r = (float)red * multiplier;
-        float g = (float)green * multiplier;
-        float b = (float)blue * multiplier;
-
-        for (uint16_t i = 0; i < strip.numPixels(); i++) {
-          strip.setPixelColor(i, (byte)r, (byte)g, (byte)b);
-        }
-
-        strip.show();
-        delay(5);
-      }
-
-      for (int j = 100; j > 0; j--) {
-        float multiplier = ((float)j) / 100.0;
-        float r = (float)red * multiplier;
-        float g = (float)green * multiplier;
-        float b = (float)blue * multiplier;
-
-        for (uint16_t i = 0; i < strip.numPixels(); i++)  {
-          strip.setPixelColor(i, (byte)r, (byte)g, (byte)b);
-        }
-        strip.show();
-        delay(8);
-      }
-      hideColor();
-    }
-  
->>>>>>> a30ebd8bd01c71885ef40aabfa12442a18ae9822
