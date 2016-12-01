@@ -4,10 +4,6 @@
   box-sizing: inherit;
 }
 html { box-sizing: border-box; }
-body,
-html {
-  height: 100%;
-}
 body {
   margin: 0;
   font-family: 'Maven Pro', sans-serif;
@@ -146,7 +142,7 @@ table {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100%;
+  margin-top: 5%;
 }
 .text-container {
   border: 1px solid #454545;
