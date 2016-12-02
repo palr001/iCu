@@ -94,6 +94,7 @@
                 }
 
                 // A temp device configuration has to be deleted after one queue item has been taken
+                // Note: this is a quick fix
                 if($dc['temp'] == 1) {
                   $stmt1 = $pdo->prepare("DELETE FROM queue WHERE device_id = ?");
                   if($stmt1->execute([$_GET['d']])) {
@@ -152,6 +153,8 @@
     }
   }
 
+  // Note: This is a quick fix
+  // TODO: Make more efficient
   if(isset($_GET['t']) && $_GET['t'] == 'boom') {
     $stmt1 = $pdo->prepare("SELECT * FROM device");
     if($stmt1->execute()) {
