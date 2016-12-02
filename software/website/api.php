@@ -20,17 +20,11 @@
           }
 
           // Spring constant (optional)
-          if(isset($_GET['sc'])) {
-            $spring = round((255 / 100) * $_GET['sc']);
-          }
+          $spring = isset($_GET['sc']) ? round((255 / 100) * $_GET['sc']) : 128;
           // Damp constant (optional)
-          if(isset($_GET['dc'])) {
-            $damp = round((255 / 100) * $_GET['dc']);
-          }
+          $damp = isset($_GET['dc']) ? round((255 / 100) * $_GET['dc']) : 128;
           // Message (optional)
-          if(isset($_GET['m'])) {
-            $message = $_GET['m'];
-          }
+          $message = isset($_GET['m']) ? $_GET['m'] : '';
 
           // Check if exists
           $stmt = $pdo->prepare("SELECT * FROM device_configuration WHERE device_id = ? AND target_device_id = ?");
@@ -83,12 +77,13 @@
       case 'gqi': // get queue item
           // Get queue item
           $stmt = $pdo->prepare("SELECT * FROM device_configuration WHERE target_device_id = ? AND device_id" .
-		" = (SELECT device_id FROM queue WHERE target_device_id = ? ORDER BY timestamp LIMIT 1)");
+		        " = (SELECT device_id FROM queue WHERE target_device_id = ? ORDER BY timestamp LIMIT 1)");
           if($stmt->execute([$_GET['d'], $_GET['d']])) {
             if ($stmt->rowCount() == 1) {
               $dc = $stmt->fetch();
-              // Delete from queue because it's not needed anymore
-              $stmt = $pdo->prepare("DELETE FROM queue WHERE target_device_id = ? LIMIT 1");
+
+              // Delete from queue because it's not needed anymore, delete all from queue when temp
+              $stmt = $pdo->prepare("DELETE FROM queue WHERE target_device_id = ? " . ($dc['temp'] != 1 ? 'LIMIT 1' : '') . "");
               if ($stmt->execute([$_GET['d']])) {
                 // Return queue item
                 // We need this check because workshop 1 hardware isn't compatible with a response of more than the color
@@ -97,8 +92,26 @@
                 } else {
                   $response = $dc['color'];
                 }
+
+                // A temp device configuration has to be deleted after one queue item has been taken
+                if($dc['temp'] == 1) {
+                  $stmt1 = $pdo->prepare("DELETE FROM queue WHERE device_id = ?");
+                  if($stmt1->execute([$_GET['d']])) {
+
+                  }
+
+                  // OR doesnt work for some reason
+                  $stmt1 = $pdo->prepare("DELETE FROM device_configuration WHERE target_device_id = ? AND temp = ?");
+                  if($stmt1->execute([$_GET['d'], 1])) {
+
+                  }
+                  $stmt1 = $pdo->prepare("DELETE FROM device_configuration WHERE device_id = ? AND temp = ?");
+                  if($stmt1->execute([$_GET['d'], 1])) {
+
+                  }
+                }
               } else {
-                $response = -1;
+
               }
           }
         }
@@ -124,6 +137,8 @@
       break;
     }
 
+
+
     // Parameter r can be used for redirecting
     if(isset($_GET['r'])) {
       if($_GET['r'] == '') {
@@ -135,6 +150,39 @@
     } else {
       echo $response;
     }
+  }
+
+  if(isset($_GET['t']) && $_GET['t'] == 'boom') {
+    $stmt1 = $pdo->prepare("SELECT * FROM device");
+    if($stmt1->execute()) {
+      $devices = $stmt1->fetchAll();
+      for($i = 0; $i < count($devices); $i++) {
+        for($x = 0; $x < count($devices); $x++) {
+          if($devices[$i] != $devices[$x]) {
+            // Check if device configuration exists
+            $stmt2 = $pdo->prepare("SELECT * FROM device_configuration WHERE device_id = ? AND target_device_id = ?");
+            if($stmt2->execute([$devices[$i]['id'], $devices[$x]['id']])) {
+              // Insert if it doesn't exist
+              if($stmt2->rowCount() == 0) {
+                $stmt2 = $pdo->prepare("INSERT INTO device_configuration(device_id, target_device_id, color, spring, damp, temp) VALUES(?, ?, ?, ?, ?, ?)");
+                // TODO: color has to be random
+                if($stmt2->execute([$devices[$i]['id'], $devices[$x]['id'], randomColor(), 127, 127, 1])) {
+                  $response = 1;
+                }
+              }
+              // Insert in queue
+              $stmt3 = $pdo->prepare("INSERT INTO queue(device_id, target_device_id) VALUES(?, ?)");
+              // TODO: color has to be random
+              if($stmt3->execute([$devices[$i]['id'], $devices[$x]['id']])) {
+                $response = 1;
+              }
+            }
+          }
+        }
+      }
+      $response = 1;
+    }
+    echo $response;
   }
 
 
