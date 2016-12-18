@@ -4,19 +4,8 @@
 #include <ESP8266WiFi.h>
 #include <WiFiManager.h> 
 #include "SpringyValue.h"
-
-#define LED_COUNT    6
-#define PIN         D2   
+#include "config.h"
 #include "WS2812_util.h"
-
-#define BUTTON_PIN  D1
-
-
-
-#define fadeInDelay  5
-#define fadeOutDelay 8
-
-#define requestDelay 2000
 
 Servo myServo;
 
@@ -24,7 +13,7 @@ int oldTime = 0;
 int oscillationTime = 500;
 String chipID;
 char chipIdArray[5] = {};
-String webURL = "http://thingscon16.futuretechnologies.nl";
+
 
 void setup() 
 {
