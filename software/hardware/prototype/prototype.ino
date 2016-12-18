@@ -42,12 +42,9 @@ void setup()
   delay(1000);  
   Serial.print(String("\nLast 2 bytes of chip ID: ") + chipID);
   
-  String wifiNameConcat = String(CONFIG_SSID) + chipID;
-  char wifiName[19] = {};
-  wifiNameConcat.toCharArray(wifiName, 19);
-  
+  String configSSID = String(CONFIG_SSID) + "_" + chipID;  
   setAllPixels(0,255,255,1.0);
-  wifiManager.autoConnect(wifiName);
+  wifiManager.autoConnect(configSSID.c_str());
   fadeBrightness(0,255,255,1.0);
   myServo.attach(D7);
 }
