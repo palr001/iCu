@@ -1,22 +1,23 @@
 #include <ESP8266HTTPClient.h>
-#include <Adafruit_NeoPixel.h>
 #include <Servo.h>
 #include <DNSServer.h>
 #include <ESP8266WiFi.h>
 #include <WiFiManager.h> 
 #include "SpringyValue.h"
 
+#define LED_COUNT    6
+#define PIN         D2   
+#include "WS2812_util.h"
 
 #define BUTTON_PIN  D1
-#define PIN         D2   
-#define LED_COUNT    6
+
+
 
 #define fadeInDelay  5
 #define fadeOutDelay 8
 
 #define requestDelay 2000
 
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, PIN, NEO_GRB + NEO_KHZ400);
 Servo myServo;
 
 int oldTime = 0;
@@ -24,8 +25,6 @@ int oscillationTime = 500;
 String chipID;
 char chipIdArray[5] = {};
 String webURL = "http://thingscon16.futuretechnologies.nl";
-
-void setAllPixels(uint8_t r, uint8_t g, uint8_t b, float multiplier);
 
 void setup() 
 {
@@ -67,16 +66,6 @@ void setup()
   myServo.attach(D7);
 }
 
-void setAllPixels(uint8_t r, uint8_t g, uint8_t b, float multiplier = 1.0) 
-{
-  for (int iPixel = 0; iPixel < LED_COUNT; iPixel++)
-    strip.setPixelColor(iPixel,
-                        (byte)((float)r * multiplier),
-                        (byte)((float)g * multiplier),
-                        (byte)((float)b * multiplier));
-  strip.show();
-}
-
 //This method starts an oscillation movement in both the LED and servo
 void oscillate(float springConstant, float dampConstant, int c)
 {
@@ -109,16 +98,6 @@ void oscillate(float springConstant, float dampConstant, int c)
   fadeBrightness(red, green, blue, abs(spring.x) / 255.0);
 }
 
-//This method grabs the current RGB values and current brightness and fades the colors to black
-void fadeBrightness(uint8_t r, uint8_t g, uint8_t b, float currentBrightness)
-{
-    for(float j = currentBrightness; j > 0.0; j-=0.01)
-    {
-          setAllPixels(r, g, b, j);
-          delay(20);
-    }
-    hideColor();
-}
 
 void loop() 
 {
@@ -197,19 +176,7 @@ void requestMessage()
   http.end();
 }
 
-void hideColor() 
-{
-  colorWipe(strip.Color(0, 0, 0));
-}
 
-void colorWipe(uint32_t c) 
-{
-  for(uint16_t i=0; i<strip.numPixels(); i++) 
-  {
-    strip.setPixelColor(i, c);
-  }
-  strip.show();
-}
 
 void configureChipID()
 {
