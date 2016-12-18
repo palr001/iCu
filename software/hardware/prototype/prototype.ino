@@ -12,12 +12,11 @@ Servo myServo;
 int oldTime = 0;
 int oscillationTime = 500;
 String chipID;
-char chipIdArray[5] = {};
 String serverURL = SERVER_URL;
 
 void setup() 
 {
-  configureChipID();
+  chipID = generateChipID();
   strip.begin();
   strip.setBrightness(255);
   WiFiManager wifiManager;
@@ -39,12 +38,10 @@ void setup()
       ESP.reset();
     }
   }
-  delay(1000);
-
-  Serial.println();
-  Serial.print("Last 2 bytes of chip ID: ");
-  Serial.println(chipID);
-
+  
+  delay(1000);  
+  Serial.print(String("\nLast 2 bytes of chip ID: ") + chipID);
+  
   String wifiNameConcat = String(CONFIG_SSID) + chipID;
   char wifiName[19] = {};
   wifiNameConcat.toCharArray(wifiName, 19);
@@ -86,7 +83,6 @@ void oscillate(float springConstant, float dampConstant, int c)
   }
   fadeBrightness(red, green, blue, abs(spring.x) / 255.0);
 }
-
 
 void loop() 
 {
@@ -165,38 +161,13 @@ void requestMessage()
   http.end();
 }
 
-
-
-void configureChipID()
+String generateChipID()
 {
-  uint32_t id = ESP.getChipId();
-  byte lower = id & 0xff;
-  byte upper = (id >> 8) & 0xff;
+  String chipIDString = String(ESP.getChipId() & 0xffff, HEX);
+  chipIDString.toUpperCase();
+  while (chipIDString.length() < 4)
+    chipIDString = String("0") + chipIDString;
 
-  String l = "";
-  String u = "";
-
-  if(lower < 10)
-  {
-    l = "0" + String(lower, HEX);
-  }
-  else
-  {
-    l = String(lower, HEX);
-  }
-
-  if(upper < 10)
-  {
-    u = "0" + String(upper, HEX);
-  }
-  else
-  {
-    u = String(upper, HEX);
-  }
- 
-  chipID = u + l;
-  chipID.toUpperCase();
-  chipID.toCharArray(chipIdArray, 5);
+  return chipIDString;
 }
-
 
