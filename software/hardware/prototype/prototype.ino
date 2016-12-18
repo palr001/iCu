@@ -13,7 +13,7 @@ int oldTime = 0;
 int oscillationTime = 500;
 String chipID;
 char chipIdArray[5] = {};
-
+String serverURL = SERVER_URL;
 
 void setup() 
 {
@@ -45,7 +45,7 @@ void setup()
   Serial.print("Last 2 bytes of chip ID: ");
   Serial.println(chipID);
 
-  String wifiNameConcat = "ConnectiKlaas_" + chipID;
+  String wifiNameConcat = String(CONFIG_SSID) + chipID;
   char wifiName[19] = {};
   wifiNameConcat.toCharArray(wifiName, 19);
   
@@ -98,7 +98,7 @@ void loop()
   }
 
   //Every requestDelay, send a request to the server
-  if(millis() > oldTime + requestDelay)
+  if(millis() > oldTime + REQUEST_DELAY)
   {
     requestMessage();
     oldTime = millis();
@@ -109,7 +109,7 @@ void sendButtonPress()
 {
     Serial.println("Sending button press to server");
     HTTPClient http;
-    http.begin(webURL + "/api.php?t=sqi&d=" + chipID);
+    http.begin(serverURL + "/api.php?t=sqi&d=" + chipID);
     uint16_t httpCode = http.GET();      
     http.end();
 }
@@ -120,7 +120,7 @@ void requestMessage()
   hideColor();
       
   HTTPClient http;
-  http.begin(webURL + "/api.php?t=gqi&d=" + chipID + "&v=2");
+  http.begin(serverURL + "/api.php?t=gqi&d=" + chipID + "&v=2");
   uint16_t httpCode = http.GET();
 
   if (httpCode == 200) 
