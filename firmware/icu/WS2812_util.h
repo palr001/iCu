@@ -1,3 +1,6 @@
+#ifndef _WS2812_UTIL_H
+#define _WS2812_UTIL_H
+
 #include <Adafruit_NeoPixel.h>
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ400);
 
@@ -36,3 +39,4 @@ void fadeBrightness(uint8_t r, uint8_t g, uint8_t b, float currentBrightness)
     hideColor();
 }
 
+#endif

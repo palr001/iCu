@@ -1,3 +1,6 @@
+#ifndef _SPRINGYVALUE_H
+#define _SPRINGYVALUE_H
+
 class SpringyValue 
 {
   public:
@@ -20,3 +23,4 @@ class SpringyValue
     }
 };
 
+#endif

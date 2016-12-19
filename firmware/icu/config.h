@@ -15,4 +15,7 @@
 
 #define SERVER_URL "http://oege.ie.hva.nl/~pijlb/icu"
 #define CONFIG_SSID "icu"
+
+#define UPDATE_INTERVAL_MS 10
+
 #endif
