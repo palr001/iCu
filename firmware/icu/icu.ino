@@ -125,7 +125,7 @@ void requestMessage()
 
   HTTPClient http;
   String requestString = serverURL + "/api.php?t=gqi&d=" + chipID + "&v=2";
-  printDebugMessage("Sending request to server: " + requestString);
+  
   http.begin(requestString);
   
   uint16_t httpCode = http.GET();
