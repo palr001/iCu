@@ -53,7 +53,7 @@ void setup()
   setAllPixels(0, 255, 255, 1.0);
   wifiManager.autoConnect(configSSID.c_str());
   fadeBrightness(0, 255, 255, 1.0);
-  myServo.attach(D7);
+  myServo.attach(SERVO_PIN);
 }
 
 //This method starts an oscillation movement in both the LED and servo
