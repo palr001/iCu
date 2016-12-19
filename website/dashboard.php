@@ -3,9 +3,10 @@
     The dashboard displays the incoming and outgoing connections of the device.
   */
   require_once('check.php');
+  require_once('config.php');
 
   // Outcoming connections
-  $outgoing_stmt = $pdo->prepare("SELECT * FROM device_configuration WHERE device_id = ? AND temp = 0");
+  $outgoing_stmt = $pdo->prepare("SELECT * FROM icu_device_configuration WHERE device_id = ? AND temp = 0");
   if(!$outgoing_stmt->execute([$_GET['d']])) {
     echo 'Something has gone wrong!';
     exit;
@@ -13,7 +14,7 @@
   $outgoing_count = $outgoing_stmt->rowCount();
 
   // When reading incoming connections the device id of the logged in user is the target device id
-  $incoming_stmt = $pdo->prepare("SELECT * FROM device_configuration WHERE target_device_id = ? AND temp = 0");
+  $incoming_stmt = $pdo->prepare("SELECT * FROM icu_device_configuration WHERE target_device_id = ? AND temp = 0");
   if(!$incoming_stmt->execute([$_GET['d']])) {
     echo 'Something has gone wrong!';
     exit;

@@ -6,7 +6,7 @@
   $message = '';
   $target_device_id = '';
   if(isset($_GET['d']) && isset($_GET['td'])) {
-    $stmt = $pdo->prepare("SELECT * FROM device_configuration WHERE device_id = ? AND target_device_id = ?");
+    $stmt = $pdo->prepare("SELECT * FROM icu_device_configuration WHERE device_id = ? AND target_device_id = ?");
     if ($stmt->execute([$_GET['d'], $_GET['td']])) {
       if($stmt->rowCount() > 0) {
         $data = $stmt->fetch();
@@ -61,6 +61,7 @@
     </form>
   </div>
 </div>
+
 <script>
   window.onload = function() {
     // Color picker

@@ -2,9 +2,9 @@
 
 # Edit this to your needs
 $servername = 'localhost';
-$username = 'root';
-$password = '';
-$db = 'internet_of_things_workshop';
+$username = DB_USERNAME;
+$password = DB_PASSWORD;
+$db = DB_NAME;
 
 try {
   $pdo = new PDO(

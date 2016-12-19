@@ -4,7 +4,7 @@
       echo 'Target device id not found!';
       exit;
   }
-  $stmt = $pdo->prepare("SELECT message FROM device_configuration WHERE device_id = ? AND target_device_id = ?");
+  $stmt = $pdo->prepare("SELECT message FROM icu_device_configuration WHERE device_id = ? AND target_device_id = ?");
   if(!$stmt->execute([$_GET['td'], $_GET['d']])) {
     echo 'Something has gone wrong!';
     exit;
