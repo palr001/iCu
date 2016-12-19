@@ -33,7 +33,12 @@ CREATE TABLE `icu_device` (
 CREATE TABLE `icu_device_configuration` (
   `device_id` varchar(4) NOT NULL,
   `target_device_id` varchar(4) NOT NULL,
-  `color` varchar(11) NOT NULL
+  `color` varchar(11) NOT NULL,
+  `spring` int,
+  `damp` int, 
+  `message` text,
+  `temp` int
+
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
