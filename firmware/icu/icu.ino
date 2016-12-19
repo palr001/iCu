@@ -1,8 +1,10 @@
+#include <OpenWiFi.h>
+
 #include <ESP8266HTTPClient.h>
 #include <Servo.h>
-#include <DNSServer.h>
 #include <ESP8266WiFi.h>
 #include <WiFiManager.h>
+
 #include "SpringyValue.h"
 #include "config.h"
 #include "WS2812_util.h"
@@ -13,6 +15,7 @@ int oldTime = 0;
 int oscillationTime = 500;
 String chipID;
 String serverURL = SERVER_URL;
+OpenWiFi hotspot;
 
 void printDebugMessage(String message) {
 #ifdef DEBUG_MODE
@@ -22,14 +25,15 @@ void printDebugMessage(String message) {
 
 void setup()
 {
-  chipID = generateChipID();
+  Serial.begin(115200); Serial.println("");
   strip.begin();
-  strip.setBrightness(255);
+  strip.setBrightness(255);  
   WiFiManager wifiManager;
-  Serial.begin(115200);
-
+  
+  hotspot.begin("fallback", "network");
   pinMode(BUTTON_PIN, INPUT_PULLUP);
-
+  
+  chipID = generateChipID();
   printDebugMessage(String("Last 2 bytes of chip ID: ") + chipID);
 
   int counter = 0;
@@ -116,11 +120,14 @@ void sendButtonPress()
 
 void requestMessage()
 {
-  printDebugMessage("Sending request to server");
+  
   hideColor();
 
   HTTPClient http;
-  http.begin(serverURL + "/api.php?t=gqi&d=" + chipID + "&v=2");
+  String requestString = serverURL + "/api.php?t=gqi&d=" + chipID + "&v=2";
+  printDebugMessage("Sending request to server: " + requestString);
+  http.begin(requestString);
+  
   uint16_t httpCode = http.GET();
 
   if (httpCode == 200)
@@ -168,6 +175,7 @@ void requestMessage()
 String generateChipID()
 {
   String chipIDString = String(ESP.getChipId() & 0xffff, HEX);
+  
   chipIDString.toUpperCase();
   while (chipIDString.length() < 4)
     chipIDString = String("0") + chipIDString;
