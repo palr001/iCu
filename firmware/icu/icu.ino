@@ -1,5 +1,4 @@
 #include <OpenWiFi.h>
-
 #include <ESP8266HTTPClient.h>
 #include <Servo.h>
 #include <ESP8266WiFi.h>
@@ -9,6 +8,13 @@
 #include "config.h"
 #include "WS2812_util.h"
 
+
+extern "C" {
+#include "user_interface.h"
+}
+
+os_timer_t myTimer;
+
 Servo myServo;
 
 int oldTime = 0;
@@ -16,26 +22,49 @@ int oscillationTime = 500;
 String chipID;
 String serverURL = SERVER_URL;
 OpenWiFi hotspot;
+SpringyValue spring;
 
 void printDebugMessage(String message) {
 #ifdef DEBUG_MODE
-  Serial.println(String(PROJECT_SHORT_NAME) + ": "+ message);
+  Serial.println(String(PROJECT_SHORT_NAME) + ": " + message);
 #endif
 }
 
+// start of timerCallback
+void timerCallback(void *pArg) {
+    spring.update(0.01);
+} // End of timerCallback
+
+
 void setup()
 {
+  // Setup timer
+  os_timer_setfn(&myTimer, timerCallback, NULL);
+  os_timer_arm(&myTimer, UPDATE_INTERVAL_MS, true);
+
+  // Set up serial port
   Serial.begin(115200); Serial.println("");
+
+  // Set up neopixels
   strip.begin();
-  strip.setBrightness(255);  
-  WiFiManager wifiManager;
-  
-  hotspot.begin("fallback", "network");
+  strip.setBrightness(255);
+
+  // Set up button
   pinMode(BUTTON_PIN, INPUT_PULLUP);
-  
+
+  // Set up Servo
+  myServo.attach(SERVO_PIN);
+
+
+  // Set up deviceID
   chipID = generateChipID();
   printDebugMessage(String("Last 2 bytes of chip ID: ") + chipID);
 
+  // Start wifi connection
+  WiFiManager wifiManager;
+  hotspot.begin("fallback", "network");
+
+  // Reset WiFi connection when button is pressed at startup
   int counter = 0;
   while (digitalRead(BUTTON_PIN) == LOW)
   {
@@ -52,18 +81,17 @@ void setup()
     }
   }
 
-  delay(1000);  
+  // if no connection could be made, set up WiFi manager
   String configSSID = String(CONFIG_SSID) + "_" + chipID;
   setAllPixels(0, 255, 255, 1.0);
   wifiManager.autoConnect(configSSID.c_str());
   fadeBrightness(0, 255, 255, 1.0);
-  myServo.attach(SERVO_PIN);
+  
 }
 
 //This method starts an oscillation movement in both the LED and servo
 void oscillate(float springConstant, float dampConstant, int c)
 {
-  SpringyValue spring;
 
   byte red = (c >> 16) & 0xff;
   byte green = (c >> 8) & 0xff;
@@ -76,7 +104,6 @@ void oscillate(float springConstant, float dampConstant, int c)
   //Start oscillating
   for (int i = 0; i < oscillationTime; i++)
   {
-    spring.update(0.01);
     setAllPixels(red, green, blue, abs(spring.x) / 255.0);
     myServo.write(90 + spring.x / 4);
 
@@ -107,6 +134,9 @@ void loop()
     requestMessage();
     oldTime = millis();
   }
+
+
+  yield();  // or delay(0);
 }
 
 void sendButtonPress()
@@ -120,14 +150,14 @@ void sendButtonPress()
 
 void requestMessage()
 {
-  
+
   hideColor();
 
   HTTPClient http;
   String requestString = serverURL + "/api.php?t=gqi&d=" + chipID + "&v=2";
-  
+
   http.begin(requestString);
-  
+
   uint16_t httpCode = http.GET();
 
   if (httpCode == 200)
@@ -175,7 +205,7 @@ void requestMessage()
 String generateChipID()
 {
   String chipIDString = String(ESP.getChipId() & 0xffff, HEX);
-  
+
   chipIDString.toUpperCase();
   while (chipIDString.length() < 4)
     chipIDString = String("0") + chipIDString;
