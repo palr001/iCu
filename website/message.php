@@ -16,9 +16,8 @@
 <link rel="stylesheet" href="main.css">
 <link href="https://fonts.googleapis.com/css?family=Maven+Pro" rel="stylesheet">
 <div class="middle-container">
-  <div>
-    <h1 class="text-center">Sinterklaas</h1>
-    <h2 class="text-center">message of <?php echo $_GET['td']; ?></h2>
+  <div>    
+    <h2 class="text-center">Message from <?php echo $_GET['td']; ?></h2>
     <div class="vertical-gap-30 text-container">
     <?php
     if($stmt->rowCount() == 1) {
