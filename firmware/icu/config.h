@@ -14,5 +14,5 @@
 #define REQUEST_DELAY 2000
 
 #define SERVER_URL "http://oege.ie.hva.nl/~pijlb/icu"
-#define CONFIG_SSID "icu_"
+#define CONFIG_SSID "icu"
 #endif
