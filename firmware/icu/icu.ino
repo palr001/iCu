@@ -7,15 +7,15 @@
 #include "SpringyValue.h"
 #include "config.h"
 #include "WS2812_util.h"
-
+#include "LEDAnimation.h"
 
 extern "C" {
 #include "user_interface.h"
 }
 
 os_timer_t myTimer;
-
 Servo myServo;
+HTTPClient http;
 
 int oldTime = 0;
 int oscillationTime = 500;
@@ -24,6 +24,10 @@ String serverURL = SERVER_URL;
 OpenWiFi hotspot;
 SpringyValue spring;
 
+LEDAnimation *currentAnimation;
+SpringAnimation springAnimation;
+BreatheAnimation breatheAnimation;
+
 void printDebugMessage(String message) {
 #ifdef DEBUG_MODE
   Serial.println(String(PROJECT_SHORT_NAME) + ": " + message);
@@ -31,23 +35,31 @@ void printDebugMessage(String message) {
 }
 
 // start of timerCallback
-void timerCallback(void *pArg) {
-    spring.update(0.01);
+void inline timerCallback() {
+  timer0_write(ESP.getCycleCount() + UPDATE_INTERVAL_US * 80);
+  currentAnimation->update(0.01);
 } // End of timerCallback
 
 
 void setup()
 {
-  // Setup timer
-  os_timer_setfn(&myTimer, timerCallback, NULL);
-  os_timer_arm(&myTimer, UPDATE_INTERVAL_MS, true);
-
-  // Set up serial port
-  Serial.begin(115200); Serial.println("");
-
   // Set up neopixels
   strip.begin();
   strip.setBrightness(255);
+
+  // Setup timer
+  noInterrupts();
+  timer0_isr_init();
+  timer0_attachInterrupt(timerCallback);
+  timer0_write(ESP.getCycleCount() + UPDATE_INTERVAL_US * 80); // 160 when running at 160mhz
+  interrupts();
+
+  // Set up connection wait animation
+  currentAnimation = &breatheAnimation;
+  breatheAnimation.begin(150, 150, 255, 0.02, 0.04, 0.5);
+
+  // Set up serial port
+  Serial.begin(115200); Serial.println("");
 
   // Set up button
   pinMode(BUTTON_PIN, INPUT_PULLUP);
@@ -55,44 +67,42 @@ void setup()
   // Set up Servo
   myServo.attach(SERVO_PIN);
 
-
   // Set up deviceID
   chipID = generateChipID();
   printDebugMessage(String("Last 2 bytes of chip ID: ") + chipID);
 
   // Start wifi connection
   WiFiManager wifiManager;
-  hotspot.begin("fallback", "network");
+  hotspot.begin("", "");
 
-  // Reset WiFi connection when button is pressed at startup
-  int counter = 0;
-  while (digitalRead(BUTTON_PIN) == LOW)
-  {
-    counter++;
-    delay(10);
-
-    if (counter > 500)
-    {
-      wifiManager.resetSettings();
-      printDebugMessage("Remove all wifi settings!");
-      setAllPixels(255, 0, 0, 1.0);
-      fadeBrightness(255, 0, 0, 1.0);
-      ESP.reset();
-    }
-  }
+  //  // Reset WiFi connection when button is pressed at startup
+  //  int counter = 0;
+  //  while (digitalRead(BUTTON_PIN) == LOW)
+  //  {
+  //    counter++;
+  //    delay(10);
+  //
+  //    if (counter > 500)
+  //    {
+  //      wifiManager.resetSettings();
+  //      printDebugMessage("Remove all wifi settings!");
+  //      setAllPixels(255, 0, 0, 1.0);
+  //      fadeBrightness(255, 0, 0, 1.0);
+  //      ESP.reset();
+  //    }
+  //  }
 
   // if no connection could be made, set up WiFi manager
   String configSSID = String(CONFIG_SSID) + "_" + chipID;
-  setAllPixels(0, 255, 255, 1.0);
+  setAllPixels(0, 255, 255, 255);
   wifiManager.autoConnect(configSSID.c_str());
   fadeBrightness(0, 255, 255, 1.0);
-  
+
 }
 
 //This method starts an oscillation movement in both the LED and servo
 void oscillate(float springConstant, float dampConstant, int c)
 {
-
   byte red = (c >> 16) & 0xff;
   byte green = (c >> 8) & 0xff;
   byte blue = c & 0xff;
@@ -104,9 +114,9 @@ void oscillate(float springConstant, float dampConstant, int c)
   //Start oscillating
   for (int i = 0; i < oscillationTime; i++)
   {
-    setAllPixels(red, green, blue, abs(spring.x) / 255.0);
+    setAllPixels(red, green, blue, abs(spring.x));
     myServo.write(90 + spring.x / 4);
-
+    spring.update(0.01);
     //Check for button press
     if (digitalRead(BUTTON_PIN) == LOW)
     {
@@ -116,7 +126,7 @@ void oscillate(float springConstant, float dampConstant, int c)
     }
     delay(10);
   }
-  fadeBrightness(red, green, blue, abs(spring.x) / 255.0);
+  //fadeBrightness(red, green, blue, abs(spring.x) / 255.0);
 }
 
 void loop()
@@ -135,14 +145,13 @@ void loop()
     oldTime = millis();
   }
 
-
   yield();  // or delay(0);
 }
 
 void sendButtonPress()
 {
   printDebugMessage("Sending button press to server");
-  HTTPClient http;
+
   http.begin(serverURL + "/api.php?t=sqi&d=" + chipID);
   uint16_t httpCode = http.GET();
   http.end();
@@ -150,10 +159,8 @@ void sendButtonPress()
 
 void requestMessage()
 {
-
   hideColor();
 
-  HTTPClient http;
   String requestString = serverURL + "/api.php?t=gqi&d=" + chipID + "&v=2";
 
   http.begin(requestString);
@@ -164,7 +171,6 @@ void requestMessage()
   {
     String response;
     response = http.getString();
-    //Serial.println(response);
 
     if (response == "-1")
     {
@@ -179,8 +185,8 @@ void requestMessage()
 
       //Parse data as strings
       String hexColor = response.substring(0, 7);
-      String springConstant = response.substring(firstComma + 1, secondComma);
-      String dampConstant = response.substring(secondComma + 1, thirdComma);;
+      String dampConstant = response.substring(firstComma + 1, secondComma);
+      String springConstant = response.substring(secondComma + 1, thirdComma);;
       String message = response.substring(thirdComma + 1, response.length());;
 
       printDebugMessage("Message received from server: \n");
@@ -190,8 +196,17 @@ void requestMessage()
       printDebugMessage("Message received: " + message);
 
       //Extract the hex color and fade the led strip
-      int number = (int) strtol( &response[1], NULL, 16);
-      oscillate(springConstant.toFloat(), dampConstant.toFloat(), number);
+      int color = (int) strtol( &response[1], NULL, 16);
+      
+      //oscillate(springConstant.toFloat(), dampConstant.toFloat(), color);      
+      float springValue = springConstant.toFloat() / 50.0;
+      float dampValue = dampConstant.toFloat() / 100.0;
+
+      printDebugMessage(String(springValue));
+      printDebugMessage(String(dampValue));
+
+      currentAnimation = &springAnimation;
+      currentAnimation->begin(color, 255.0, 1.5, 10.0);
     }
   }
   else
