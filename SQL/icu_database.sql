@@ -1,3 +1,12 @@
+-- phpMyAdmin SQL Dump
+-- version 4.6.0
+-- http://www.phpmyadmin.net
+--
+-- Host: localhost
+-- Generation Time: Dec 22, 2016 at 11:23 PM
+-- Server version: 5.6.30
+-- PHP Version: 5.6.20-pl0-gentoo
+
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
@@ -7,11 +16,8 @@ SET time_zone = "+00:00";
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
 
-
--- --------------------------------------------------------
-
 --
--- Table structure for table `application`
+-- Database: `zpijlb`
 --
 
 -- --------------------------------------------------------
@@ -21,7 +27,8 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `icu_device` (
-  `id` varchar(4) NOT NULL
+  `id` varchar(4) NOT NULL,
+  `last_request` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -34,11 +41,11 @@ CREATE TABLE `icu_device_configuration` (
   `device_id` varchar(4) NOT NULL,
   `target_device_id` varchar(4) NOT NULL,
   `color` varchar(11) NOT NULL,
-  `spring` int,
-  `damp` int, 
-  `message` text,
-  `temp` int
-
+  `spring` tinyint(3) UNSIGNED DEFAULT NULL,
+  `damp` tinyint(3) UNSIGNED DEFAULT NULL,
+  `message` longtext,
+  `blacklist` tinyint(1) NOT NULL DEFAULT '0',
+  `temp` tinyint(1) DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -52,6 +59,10 @@ CREATE TABLE `icu_queue` (
   `target_device_id` varchar(4) NOT NULL,
   `device_id` varchar(4) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Indexes for dumped tables
+--
 
 --
 -- Indexes for table `icu_device`

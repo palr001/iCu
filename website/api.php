@@ -76,6 +76,9 @@
       break;
       case 'gqi': // get queue item
           // Get queue item
+          $stmt = $pdo->prepare("UPDATE icu_device SET last_request=CURRENT_TIMESTAMP WHERE id = ?");
+          $stmt->execute([$_GET['d']]);
+
           $stmt = $pdo->prepare("SELECT * FROM icu_device_configuration WHERE target_device_id = ? AND device_id" .
 		        " = (SELECT device_id FROM icu_queue WHERE target_device_id = ? ORDER BY timestamp LIMIT 1)");
           if($stmt->execute([$_GET['d'], $_GET['d']])) {
