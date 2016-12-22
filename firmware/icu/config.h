@@ -1,10 +1,11 @@
-#ifndef _CONFIG_H 
+#ifndef _CONFIG_H
 #define _CONFIG_H
 
 #define DEBUG_MODE
 #define LED_COUNT    6
-#define LED_PIN     D2   
+#define LED_PIN     D2
 #define BUTTON_PIN  D1
+#define BUTTONLOW_PIN D0
 #define SERVO_PIN D7
 
 #define FADEIN_DELAY 5

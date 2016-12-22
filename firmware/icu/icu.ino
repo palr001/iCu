@@ -19,23 +19,21 @@ OpenWiFi hotspot;
 
 void printDebugMessage(String message) {
 #ifdef DEBUG_MODE
-  Serial.println(String(PROJECT_SHORT_NAME) + ": "+ message);
+  Serial.println(String(PROJECT_SHORT_NAME) + ": " + message);
 #endif
 }
 
 void setup()
 {
+  pinMode(BUTTONLOW_PIN, OUTPUT);
+  digitalWrite(BUTTONLOW_PIN, LOW);
+  
   Serial.begin(115200); Serial.println("");
   strip.begin();
-  strip.setBrightness(255);  
-  WiFiManager wifiManager;
-  
-  hotspot.begin("fallback", "network");
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
-  
-  chipID = generateChipID();
-  printDebugMessage(String("Last 2 bytes of chip ID: ") + chipID);
+  strip.setBrightness(255);
+  setAllPixels(0, 255, 255, 1.0);
 
+  WiFiManager wifiManager;
   int counter = 0;
   while (digitalRead(BUTTON_PIN) == LOW)
   {
@@ -51,10 +49,12 @@ void setup()
       ESP.reset();
     }
   }
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
 
-  delay(1000);  
+  chipID = generateChipID();
+  printDebugMessage(String("Last 2 bytes of chip ID: ") + chipID);  
   String configSSID = String(CONFIG_SSID) + "_" + chipID;
-  setAllPixels(0, 255, 255, 1.0);
+
   wifiManager.autoConnect(configSSID.c_str());
   fadeBrightness(0, 255, 255, 1.0);
   myServo.attach(SERVO_PIN);
@@ -120,14 +120,14 @@ void sendButtonPress()
 
 void requestMessage()
 {
-  
+
   hideColor();
 
   HTTPClient http;
   String requestString = serverURL + "/api.php?t=gqi&d=" + chipID + "&v=2";
-  
+
   http.begin(requestString);
-  
+
   uint16_t httpCode = http.GET();
 
   if (httpCode == 200)
@@ -175,7 +175,7 @@ void requestMessage()
 String generateChipID()
 {
   String chipIDString = String(ESP.getChipId() & 0xffff, HEX);
-  
+
   chipIDString.toUpperCase();
   while (chipIDString.length() < 4)
     chipIDString = String("0") + chipIDString;
