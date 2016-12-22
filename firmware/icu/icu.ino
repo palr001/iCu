@@ -49,6 +49,7 @@ void setup()
       ESP.reset();
     }
   }
+  hotspot.begin(BACKUP_SSID, BACKUP_PASSWORD);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
 
   chipID = generateChipID();

@@ -16,4 +16,8 @@
 
 #define SERVER_URL "http://oege.ie.hva.nl/~pijlb/icu"
 #define CONFIG_SSID "icu"
+
+#define BACKUP_SSID "BackupSSIDName"
+#define BACKIP_PASSWORD "BackupPassword"
+
 #endif
