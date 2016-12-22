@@ -51,7 +51,7 @@
       </div>
       <div class="vertical-gap-30">
         <div class="text-center">
-          <label for="message">Sinterklaas poem:</label>
+          <label for="message">Message: </label>
         </div>
         <textarea name="m" id="message" rows="5"><?php echo $message; ?></textarea>
       </div>
