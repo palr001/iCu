@@ -13,6 +13,7 @@
       </div>
       <div class="text-center">
         <button type="submit" class="std-button">Go</button>
+        <button type="submit" class="std-button"><a href="https://oege.ie.hva.nl/~palr001/icu_vis/visualize_connections.php" style="color: #fff; text-decoration: none;">Network</a></button>
       </div>
     </form>
   </div>

@@ -1,21 +1,18 @@
 <?php
 
 # Edit this to your needs
-$servername = 'localhost';
-$username = DB_USERNAME;
-$password = DB_PASSWORD;
-$db = DB_NAME;
+
+$servername = 'oege.ie.hva.nl';
+$username = 'palr001';
+$password = 'tsc3C2zNoK2n7J';
+$db = 'zpalr001';
+$dsn = "mysql:host={$servername};dbname={$db}";
 
 try {
-  $pdo = new PDO(
-      'mysql:host=' . $servername . ';dbname=' . $db,
-      $username,
-      $password
-    );
+ $pdo = new PDO($dsn , $username, $password);
 } catch(PDOException $e) {
   die($e->getMessage());
 }
-
 return $pdo;
 
 ?>

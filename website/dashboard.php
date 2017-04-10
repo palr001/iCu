@@ -5,7 +5,7 @@
   require_once('check.php');
   require_once('config.php');
 
-  // Outcoming connections
+  // Outgoing connections
   $outgoing_stmt = $pdo->prepare("SELECT * FROM icu_device_configuration WHERE device_id = ? AND temp = 0");
   if(!$outgoing_stmt->execute([$_GET['d']])) {
     echo 'Something has gone wrong!';
@@ -107,4 +107,7 @@
             }
       ?>
   </table>
+  <div class="text-center">
+		<button type="submit" class="std-button"><a href="https://oege.ie.hva.nl/~palr001/icu/" style="color: #fff; text-decoration: none;">Home</a></button>
+	</div>
 </div>

@@ -146,9 +146,9 @@
     // Parameter r can be used for redirecting
     if(isset($_GET['r'])) {
       if($_GET['r'] == '') {
-        $location = DOC_ROOT . '/dashboard.php?d=' . $_GET['d'];
+        $location = ROOT . '/dashboard.php?d=' . $_GET['d'];
       } else {
-        $location = DOC_ROOT . $_GET['r'];
+        $location = ROOT . $_GET['r'];
       }
       redirect($location);
     } else {

@@ -3,6 +3,7 @@
 *:after {
   box-sizing: inherit;
 }
+
 html { box-sizing: border-box; }
 body {
   margin: 0;
@@ -113,6 +114,7 @@ table td.small-cell { white-space: nowrap; }
   padding: 10px 20px;
   border: 2px solid #333;
   background-color: #333;
+  text-decoration: none;
 }
 .bold-text {
   font-weight: bold;
